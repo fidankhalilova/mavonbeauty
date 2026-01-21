@@ -20,7 +20,7 @@ export default function ProductCards() {
         }
     ];
     return (
-        <section className="py-8 md:py-16 px-4 md:px-8" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+        <section className="py-8 mt-7.5 md:py-16 px-4 md:px-8" style={{ fontFamily: '"Montserrat", sans-serif' }}>
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-6">
                     {cards.map((card, index) => (
