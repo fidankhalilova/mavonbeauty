@@ -1,11 +1,9 @@
-import Header from '../../Layout/RootLayout/Header';
-import HeroBanner from '../../Sections/Home/HerroBanner';
+import HomePage from "./home/page";
 
 export default function Home() {
   return (
     <main>
-      <Header />
-      <HeroBanner />
+      <HomePage />
     </main>
   );
 }
