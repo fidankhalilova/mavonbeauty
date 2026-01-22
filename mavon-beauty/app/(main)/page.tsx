@@ -2,7 +2,9 @@ import FeaturedProducts from "@/Sections/Home/FeaturedProducts";
 import HeroBanner from "@/Sections/Home/HerroBanner";
 import MostPopular from "@/Sections/Home/MostPopular";
 import ProductCards from "@/Sections/Home/ProductCards";
+import ProductDetailSection from "@/Sections/Home/ProductDetailSection";
 import ShopByCollection from "@/Sections/Home/Shopbycollection";
+import TextSlider from "@/Sections/Home/TextSlider";
 
 export default function HomePage() {
     return (
@@ -13,6 +15,8 @@ export default function HomePage() {
             <ShopByCollection/>
             <FeaturedProducts/>
             <MostPopular/>
+            <TextSlider/>
+            <ProductDetailSection/>
         </>
     )
 }

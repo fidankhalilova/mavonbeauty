@@ -1,15 +1,17 @@
 import React from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <>
-            <Header/>
-            <main className="pt-16">{children}</main>
-        </>
-    );
+  return (
+    <>
+      <Header />
+      <main className="pt-16">{children}</main>
+      <Footer />
+    </>
+  );
 }
