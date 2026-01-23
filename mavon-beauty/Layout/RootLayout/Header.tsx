@@ -1,4 +1,6 @@
 import { Search, ShoppingCart, User, ChevronDown } from "lucide-react";
+import Link from "next/link";
+
 export default function Navbar() {
   return (
     <nav
@@ -14,46 +16,53 @@ export default function Navbar() {
               className="h-6"
             />
           </div>
-
           <div className="hidden md:flex items-center space-x-8">
-            <a
-              href="#"
+            <Link
+              href="/"
               className="text-black hover:text-gray-600 font-semibold"
             >
               Home
-            </a>
+            </Link>
             <div className="relative group">
-              <button className="flex items-center text-black hover:text-gray-600 font-semibold">
-                <a href="/shop">Store</a>
+              <Link
+                href="/shop"
+                className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
+              >
+                Shop
                 <ChevronDown className="ml-1 h-4 w-4" />
-              </button>
+              </Link>
             </div>
-            <a
-              href="#"
+            <Link
+              href="/Blog"
               className="text-black hover:text-gray-600 font-semibold"
             >
-              Skin Care
-            </a>
-            <a
-              href="#"
+              Blog
+            </Link>
+            <Link
+              href="/about-us"
               className="text-black hover:text-gray-600 font-semibold"
             >
-              Baby & Kids
-            </a>
+              About Us
+            </Link>
             <div className="relative group">
-              <button className="flex items-center text-black hover:text-gray-600 font-semibold">
-                Explore
+              <Link
+                href="/faq"
+                className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
+              >
+                Faq
                 <ChevronDown className="ml-1 h-4 w-4" />
-              </button>
+              </Link>
             </div>
             <div className="relative group">
-              <button className="flex items-center text-black hover:text-gray-600 font-semibold">
-                Theme Features
+              <Link
+                href="/contact-us"
+                className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
+              >
+                Contact Us
                 <ChevronDown className="ml-1 h-4 w-4" />
-              </button>
+              </Link>
             </div>
           </div>
-
           <div className="flex items-center">
             <button className="text-black hover:text-gray-900 px-4">
               <Search className="h-5.5 w-5.5" />
