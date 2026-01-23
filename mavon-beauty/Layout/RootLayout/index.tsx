@@ -12,14 +12,18 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   
-  // Auth səhifələrini yoxla
+  // Auth və Admin səhifələrini yoxla
   const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAdminPage = pathname.startsWith('/admin');
+  
+  // Auth və ya Admin səhifəsidirsə, header/footer göstərmə
+  const hideLayout = isAuthPage || isAdminPage;
 
   return (
     <>
-      {!isAuthPage && <Header />}
-      <main className={!isAuthPage ? "pt-16" : ""}>{children}</main>
-      {!isAuthPage && <Footer />}
+      {!hideLayout && <Header />}
+      <main className={!hideLayout ? "pt-16" : ""}>{children}</main>
+      {!hideLayout && <Footer />}
     </>
   );
 }
