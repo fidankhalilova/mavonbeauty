@@ -13,7 +13,8 @@
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-range-slider-input": "^3.3.2"
+    "react-range-slider-input": "^3.3.2",
+    "swiper": "^12.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

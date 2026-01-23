@@ -1,6 +1,8 @@
 import Offer from "@/Sections/Shop/Offer";
 import ShopBanner from "@/Sections/Shop/ShopBanner";
 import ShopMain from "@/Sections/Shop/ShopMain";
+import ShopSubs from "@/Sections/Shop/ShopSubs";
+import Suggestions from "@/Sections/Shop/Suggestions";
 
 export default function ShopTemplate() {
   return (
@@ -8,6 +10,8 @@ export default function ShopTemplate() {
       <ShopBanner />
       <Offer />
       <ShopMain />
+      <Suggestions />
+      <ShopSubs />
     </div>
   );
 }

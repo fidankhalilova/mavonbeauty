@@ -4,13 +4,16 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  Heart,
   Columns2,
   Columns3,
   Square,
 } from "lucide-react";
 import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
+import ProductCard from "@/Components/ProductCard";
 
+// Main Shop Page Component
 export default function ShopMain() {
   const [layout, setLayout] = useState(3); // 1, 2, or 3 columns
   const [priceRange, setPriceRange] = useState([0, 1500]);
@@ -25,64 +28,125 @@ export default function ShopMain() {
   const products = [
     {
       id: 1,
-      name: "Benefit Cosmetics Hoola Matte Bronzer",
+      name: "Neutrogena Hydro Boost Water Gel",
       price: 500,
       image:
         "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
-      colors: ["#F4C2A8", "#F8B4AA", "#2C4A52"],
+      colors: ["#2C5F4F", "#C8E6C9", "#FFE5B4"],
+      moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Hydrating water gel that provides 48-hour moisture for plump, dewy skin. Hydrating water gel that provides 48-hour moisture for plump, dewy skin. Hydrating water gel that provides 48-hour moisture for plump, dewy skin.",
+      colorOptions: [
+        { name: "Forest Green", hex: "#2C5F4F" },
+        { name: "Mint", hex: "#C8E6C9" },
+        { name: "Peach", hex: "#FFE5B4" },
+        { name: "Sky Blue", hex: "#87CEEB" },
+      ],
+      weightOptions: ["50ml", "100ml", "200ml"],
+      badge: "Bestseller",
     },
     {
       id: 2,
       name: "Cetaphil Gentle Skin Cleanser",
       price: 280,
-      rating: 5,
-      reviews: 1,
       image: "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
       colors: ["#F4C2A8", "#F8B4AA", "#B8E6D5"],
       moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Gentle, non-irritating cleanser perfect for sensitive skin.",
+      colorOptions: [
+        { name: "Peach Orange", hex: "#F4C2A8" },
+        { name: "Rose Pink", hex: "#F8B4AA" },
+        { name: "Mint Green", hex: "#B8E6D5" },
+      ],
+      weightOptions: ["100ml", "200ml", "400ml"],
     },
     {
       id: 3,
-      name: "Gentle Micellar Water",
-      price: 200,
+      name: "Neutrogena Hydro Boost Water Gel",
+      price: 500,
       image:
-        "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600",
-      colors: ["#F4C2A8", "#B8E6D5", "#4DB8AC"],
-      moreColors: 2,
+        "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
+      colors: ["#2C5F4F", "#C8E6C9", "#FFE5B4"],
+      moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Hydrating water gel that provides 48-hour moisture for plump, dewy skin.",
+      colorOptions: [
+        { name: "Forest Green", hex: "#2C5F4F" },
+        { name: "Mint", hex: "#C8E6C9" },
+        { name: "Peach", hex: "#FFE5B4" },
+        { name: "Sky Blue", hex: "#87CEEB" },
+      ],
+      weightOptions: ["50ml", "100ml", "200ml"],
+      badge: "Bestseller",
     },
     {
       id: 4,
-      name: "Organcy Baby Lotion",
-      price: 350,
-      image:
-        "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
-      colors: ["#E8E8E8", "#FFE5E5"],
+      name: "Cetaphil Gentle Skin Cleanser",
+      price: 280,
+      image: "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
+      colors: ["#F4C2A8", "#F8B4AA", "#B8E6D5"],
+      moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Gentle, non-irritating cleanser perfect for sensitive skin.",
+      colorOptions: [
+        { name: "Peach Orange", hex: "#F4C2A8" },
+        { name: "Rose Pink", hex: "#F8B4AA" },
+        { name: "Mint Green", hex: "#B8E6D5" },
+      ],
+      weightOptions: ["100ml", "200ml", "400ml"],
     },
     {
       id: 5,
-      name: "Organcy Rebel Butter Serum",
-      price: 420,
-      image: "https://images.unsplash.com/photo-1556229010-aa1e86d66414?w=600",
-      colors: ["#8B7355", "#D4A574"],
+      name: "Neutrogena Hydro Boost Water Gel",
+      price: 500,
+      image:
+        "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
+      colors: ["#2C5F4F", "#C8E6C9", "#FFE5B4"],
+      moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Hydrating water gel that provides 48-hour moisture for plump, dewy skin.",
+      colorOptions: [
+        { name: "Forest Green", hex: "#2C5F4F" },
+        { name: "Mint", hex: "#C8E6C9" },
+        { name: "Peach", hex: "#FFE5B4" },
+        { name: "Sky Blue", hex: "#87CEEB" },
+      ],
+      weightOptions: ["50ml", "100ml", "200ml"],
+      badge: "Bestseller",
     },
     {
       id: 6,
-      name: "Organcy Cosmetic Foundation",
-      price: 380,
-      image:
-        "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
-      colors: ["#FFF5E6", "#F4C2A8"],
+      name: "Cetaphil Gentle Skin Cleanser",
+      price: 280,
+      image: "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
+      colors: ["#F4C2A8", "#F8B4AA", "#B8E6D5"],
+      moreColors: 3,
+      showWishlist: true,
+      // ADD THESE FIELDS FOR MODAL:
+      description:
+        "Gentle, non-irritating cleanser perfect for sensitive skin.",
+      colorOptions: [
+        { name: "Peach Orange", hex: "#F4C2A8" },
+        { name: "Rose Pink", hex: "#F8B4AA" },
+        { name: "Mint Green", hex: "#B8E6D5" },
+      ],
+      weightOptions: ["100ml", "200ml", "400ml"],
     },
   ];
 
-  const toggleSection = (section: any) => {
+  const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  const handlePriceChange = (e: any, index: any) => {
-    const newRange = [...priceRange];
-    newRange[index] = parseInt(e.target.value);
-    setPriceRange(newRange);
   };
 
   const getGridClass = () => {
@@ -98,19 +162,28 @@ export default function ShopMain() {
         <div className="flex gap-3">
           <button
             onClick={() => setLayout(1)}
-            className={`pr-2 hover:bg-gray-100 rounded transition-colors ${layout === 1 ? "text-green-600" : "text-gray-400"}`}
+            className={`pr-2 hover:bg-gray-100 rounded transition-colors ${
+              layout === 1 ? "text-green-600" : "text-gray-400"
+            }`}
+            title="1 column"
           >
             <Square />
           </button>
           <button
             onClick={() => setLayout(2)}
-            className={`p-2 hover:bg-gray-100 rounded transition-colors ${layout === 2 ? "text-green-600" : "text-gray-400"}`}
+            className={`p-2 hover:bg-gray-100 rounded transition-colors ${
+              layout === 2 ? "text-green-600" : "text-gray-400"
+            }`}
+            title="2 columns"
           >
             <Columns2 />
           </button>
           <button
             onClick={() => setLayout(3)}
-            className={`p-2 hover:bg-gray-100 rounded transition-colors ${layout === 3 ? "text-green-600" : "text-gray-400"}`}
+            className={`p-2 hover:bg-gray-100 rounded transition-colors ${
+              layout === 3 ? "text-green-600" : "text-gray-400"
+            }`}
+            title="3 columns"
           >
             <Columns3 />
           </button>
@@ -293,57 +366,7 @@ export default function ShopMain() {
         <div className="lg:col-span-3">
           <div className={`grid ${getGridClass()} gap-6`}>
             {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-lg overflow-hidden group"
-              >
-                <div className="relative bg-pink-50 aspect-square overflow-hidden rounded-lg">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <button className="absolute bottom-4 right-4 bg-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-gray-50">
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {product.name}
-                  </h3>
-                  <p className="text-lg font-bold mb-3">
-                    From ${product.price.toFixed(2)}
-                  </p>
-                  {product.rating && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className="text-gray-900">
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600">
-                        ({product.reviews})
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {product.colors.map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="w-6 h-6 rounded-full border-2 border-gray-200"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                    {product.moreColors && (
-                      <span className="text-sm text-gray-600">
-                        +{product.moreColors}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </div>
