@@ -1,6 +1,9 @@
 import ContactSection from "@/Sections/ContactUs/ContactSection";
-export default function AboutUsPage() {
+import MapSection from "@/Sections/ContactUs/Map";
+export default function ContactUsPage() {
     return (
-        <ContactSection />
+        <><ContactSection />
+        <MapSection />
+        </>
     );
 }
