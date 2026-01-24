@@ -1,4 +1,3 @@
-// layout/index.tsx
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation";
@@ -11,14 +10,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-
-  // Auth və Admin səhifələrini yoxla
-  const isAuthPage = pathname === "/login" || pathname === "/register";
-  const isAdminPage = pathname.startsWith("/admin");
-
-  // Auth və ya Admin səhifəsidirsə, header/footer göstərmə
+  const isAuthPage = pathname === "/users" || pathname === "/admin" || pathname === "/products" || pathname === "/color";
+  const isAdminPage = pathname ? pathname.startsWith("/admin") : false;
+  console.log(" Current pathname:", pathname);
+  console.log(" Is admin page:", isAdminPage);
   const hideLayout = isAuthPage || isAdminPage;
-
   return (
     <>
       {!hideLayout && <Header />}
