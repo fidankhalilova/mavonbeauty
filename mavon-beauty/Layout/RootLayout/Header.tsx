@@ -33,7 +33,7 @@ export default function Navbar() {
               </Link>
             </div>
             <Link
-              href="/Blog"
+              href="/blog"
               className="text-black hover:text-gray-600 font-semibold"
             >
               Blog

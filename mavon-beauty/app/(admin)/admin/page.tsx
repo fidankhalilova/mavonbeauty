@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                                             {products.reduce((sum, p) => sum + p.stock, 0)}
                                         </p>
                                     </div>
-                                    <div className="w-12 h-12 bg-linear-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
                                         <Sparkles className="w-6 h-6 text-white" />
                                     </div>
                                 </div>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-                                    <thead className="bg-linear-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                                    <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Name</th>
                                             <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Email</th>
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-                                    <thead className="bg-linear-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                                    <thead className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Name</th>
                                             <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">Brand</th>
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
                                 <div className="p-6 border-t border-emerald-100">
                                     <button
                                         onClick={() => setIsAddingProduct(true)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md"
+                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md"
                                     >
                                         <Plus className="w-5 h-5" />
                                         Add New Product
