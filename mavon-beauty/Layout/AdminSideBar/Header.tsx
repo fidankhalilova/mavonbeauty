@@ -3,7 +3,7 @@ import React, { useState, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-    Search, Bell, Settings, Menu, Sparkles, LogOut, Filter, X
+    Search, Bell, Settings, Menu, LogOut, Filter, X
 } from 'lucide-react';
 
 interface MenuItem {
@@ -18,6 +18,9 @@ interface AdminLayoutProps {
     menuItems: MenuItem[];
     showFilters?: boolean;
     onFiltersChange?: (filters: FilterState) => void;
+    colors?: Array<{ id: string; name: string; hex: string }>;
+    brands?: string[];
+    sizes?: string[];
 }
 
 interface FilterState {
@@ -26,31 +29,21 @@ interface FilterState {
     sizes: string[];
 }
 
-export default function AdminLayout({ children, menuItems, showFilters = false, onFiltersChange }: AdminLayoutProps) {
+export default function AdminLayout({ 
+    children, 
+    menuItems, 
+    showFilters = false, 
+    onFiltersChange,
+    colors = [],
+    brands = [],
+    sizes = []
+}: AdminLayoutProps) {
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [filterOpen, setFilterOpen] = useState(false);
     const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-
-    const colors = [
-        { id: 'red', name: 'Qırmızı', hex: '#EF4444' },
-        { id: 'blue', name: 'Mavi', hex: '#3B82F6' },
-        { id: 'green', name: 'Yaşıl', hex: '#10B981' },
-        { id: 'pink', name: 'Çəhrayı', hex: '#EC4899' },
-        { id: 'black', name: 'Qara', hex: '#1F2937' },
-        { id: 'white', name: 'Ağ', hex: '#F9FAFB' },
-        { id: 'purple', name: 'Bənövşəyi', hex: '#8B5CF6' },
-        { id: 'gold', name: 'Qızılı', hex: '#F59E0B' },
-    ];
-
-    const brands = [
-        'MAC', 'Maybelline', 'L\'Oréal', 'Estée Lauder', 
-        'Clinique', 'Dior', 'Chanel', 'NYX', 'Fenty Beauty'
-    ];
-
-    const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '30ml', '50ml', '100ml'];
 
     const toggleFilter = (value: string, setter: React.Dispatch<React.SetStateAction<string[]>>, current: string[]) => {
         const newValues = current.includes(value)
@@ -92,11 +85,12 @@ export default function AdminLayout({ children, menuItems, showFilters = false, 
                 <div className="p-4 border-b border-emerald-700">
                     <div className="flex items-center justify-between">
                         {sidebarOpen && (
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                                    <Sparkles className="w-6 h-6 text-emerald-600" />
-                                </div>
-                                <span className="text-xl font-light">Beauty Admin</span>
+                            <div className="flex items-center gap-3 bg-white px-3 py-2 rounded-lg">
+                                <img 
+                                    src="https://mavon-beauty.myshopify.com/cdn/shop/files/mavon_140x.png?v=1691552606" 
+                                    alt="Mavon Beauty" 
+                                    className="h-8 w-auto object-contain"
+                                />
                             </div>
                         )}
                         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-emerald-700 rounded-lg">
@@ -215,68 +209,74 @@ export default function AdminLayout({ children, menuItems, showFilters = false, 
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Colors */}
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Rənglər</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {colors.map(color => (
-                                        <button
-                                            key={color.id}
-                                            onClick={() => toggleFilter(color.id, setSelectedColors, selectedColors)}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
-                                                selectedColors.includes(color.id)
-                                                    ? 'border-emerald-600 bg-emerald-50'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            <span 
-                                                className="w-4 h-4 rounded-full border border-gray-300"
-                                                style={{ backgroundColor: color.hex }}
-                                            ></span>
-                                            <span className="text-sm">{color.name}</span>
-                                        </button>
-                                    ))}
+                            {colors.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-3">Rənglər</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {colors.map(color => (
+                                            <button
+                                                key={color.id}
+                                                onClick={() => toggleFilter(color.id, setSelectedColors, selectedColors)}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
+                                                    selectedColors.includes(color.id)
+                                                        ? 'border-emerald-600 bg-emerald-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                <span 
+                                                    className="w-4 h-4 rounded-full border border-gray-300"
+                                                    style={{ backgroundColor: color.hex }}
+                                                ></span>
+                                                <span className="text-sm">{color.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Brands */}
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Brendlər</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {brands.map(brand => (
-                                        <button
-                                            key={brand}
-                                            onClick={() => toggleFilter(brand, setSelectedBrands, selectedBrands)}
-                                            className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
-                                                selectedBrands.includes(brand)
-                                                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            {brand}
-                                        </button>
-                                    ))}
+                            {brands.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-3">Brendlər</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {brands.map(brand => (
+                                            <button
+                                                key={brand}
+                                                onClick={() => toggleFilter(brand, setSelectedBrands, selectedBrands)}
+                                                className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
+                                                    selectedBrands.includes(brand)
+                                                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {brand}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Sizes */}
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Ölçülər</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {sizes.map(size => (
-                                        <button
-                                            key={size}
-                                            onClick={() => toggleFilter(size, setSelectedSizes, selectedSizes)}
-                                            className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
-                                                selectedSizes.includes(size)
-                                                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
+                            {sizes.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-3">Ölçülər</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {sizes.map(size => (
+                                            <button
+                                                key={size}
+                                                onClick={() => toggleFilter(size, setSelectedSizes, selectedSizes)}
+                                                className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                                                    selectedSizes.includes(size)
+                                                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Active Filters Summary */}

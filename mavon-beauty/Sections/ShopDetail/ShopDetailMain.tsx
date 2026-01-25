@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import {
   Minus,
   Plus,
@@ -9,50 +10,80 @@ import {
   Share2,
 } from "lucide-react";
 
-export default function ShopDetailMain() {
-  const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState(0);
-  const [openSection, setOpenSection] = useState<string | null>("description");
-  const [mainImage, setMainImage] = useState(
-    "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
-  );
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  images: string[];
+  brand: string;
+  color: string;
+  size: string;
+  weight: number;
+  price: number;
+  stock: number;
+  homePage: boolean;
+}
 
-  const product = {
-    sku: "69496",
-    name: "Benefit Cosmetics Hoola Matte Bronzer",
-    price: 500.0,
-    vendor: "Mavon Beauty",
-    stock: 50,
-    stockPercentage: 65, // for progress bar
-    colors: [
-      {
-        name: "Peach orange",
-        image:
-          "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=100",
-      },
-      {
-        name: "Rose pink",
-        image:
-          "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=100",
-      },
-      {
-        name: "Teal blue",
-        image:
-          "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=100",
-      },
-    ],
+const API_BASE_URL = 'http://localhost:5000/api/v1';
+
+export default function ShopDetailMain() {
+  const params = useParams();
+  const productId = params?.id as string;
+
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [openSection, setOpenSection] = useState<string | null>("description");
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/products/${productId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setProduct(data.data);
+      } else {
+        setError('Product not found');
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setError('Failed to load product');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Product images for the gallery (same as from image gallery component)
-  const productImages = [
-    "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
-    "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
-    "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600",
-    "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
-    "https://images.unsplash.com/photo-1556229010-aa1e86d66414?w=600",
-  ];
+  const handleQuantityDecrease = () => {
+    if (quantity > 1) setQuantity(quantity - 1);
+  };
 
-  // Helper function to assign different gradient backgrounds
+  const handleQuantityIncrease = () => {
+    if (product && quantity < product.stock) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value >= 1 && product && value <= product.stock) {
+      setQuantity(value);
+    }
+  };
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
   const getGradientClass = (index: number): string => {
     const gradients = [
       "from-pink-50 to-orange-50",
@@ -65,24 +96,36 @@ export default function ShopDetailMain() {
     return gradients[index % gradients.length];
   };
 
-  const handleQuantityDecrease = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
+  const getStockPercentage = () => {
+    if (!product) return 0;
+    const maxStock = 100;
+    return Math.min((product.stock / maxStock) * 100, 100);
   };
 
-  const handleQuantityIncrease = () => {
-    setQuantity(quantity + 1);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="inline-block w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 1) {
-      setQuantity(value);
-    }
-  };
+  if (error || !product) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-xl text-gray-600 mb-4">{error || 'Product not found'}</p>
+        <a href="/shop" className="text-emerald-600 hover:text-emerald-700 underline">
+          Back to Shop
+        </a>
+      </div>
+    );
+  }
 
-  const toggleSection = (section: string) => {
-    setOpenSection(openSection === section ? null : section);
-  };
+  const productImages = product.images && product.images.length > 0
+    ? product.images.map(img => `${API_BASE_URL.replace('/api/v1', '')}${img}`)
+    : ['https://via.placeholder.com/600x600?text=No+Image'];
+
+  const mainImage = productImages[selectedImageIndex] || productImages[0];
 
   return (
     <div>
@@ -94,31 +137,39 @@ export default function ShopDetailMain() {
             <div className="w-full rounded-2xl mb-4 aspect-square flex items-center justify-center">
               <img
                 src={mainImage}
-                alt="Main product image"
+                alt={product.name}
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://via.placeholder.com/600x600?text=No+Image';
+                }}
               />
             </div>
 
             {/* Additional Images Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {productImages.slice(1).map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setMainImage(image)}
-                  className={`aspect-square overflow-hidden flex items-center justify-center transition-all hover:scale-105 ${
-                    mainImage === image
-                      ? "ring-4 ring-gray-900 ring-offset-1"
-                      : "hover:ring-2 hover:ring-gray-400"
-                  } ${getGradientClass(index)}`}
-                >
-                  <img
-                    src={image}
-                    alt={`Product image ${index + 2}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {productImages.length > 1 && (
+              <div className="grid grid-cols-2 gap-4">
+                {productImages.slice(1).map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index + 1)}
+                    className={`aspect-square overflow-hidden flex items-center justify-center transition-all hover:scale-105 ${
+                      selectedImageIndex === index + 1
+                        ? "ring-4 ring-gray-900 ring-offset-1"
+                        : "hover:ring-2 hover:ring-gray-400"
+                    } bg-gradient-to-br ${getGradientClass(index)}`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 2}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -136,7 +187,7 @@ export default function ShopDetailMain() {
 
             {/* SKU */}
             <p className="text-gray-600 mb-4">
-              <span className="font-semibold">Sku:</span> {product.sku}
+              <span className="font-semibold">Sku:</span> {product._id.slice(-6).toUpperCase()}
             </p>
 
             {/* Product Title */}
@@ -149,52 +200,40 @@ export default function ShopDetailMain() {
               ${product.price.toFixed(2)}
             </p>
 
-            {/* Vendor */}
+            {/* Vendor/Brand */}
             <p className="text-gray-700 mb-4">
-              <span className="font-semibold">Vendor:</span> {product.vendor}
+              <span className="font-semibold">Vendor:</span> {product.brand}
             </p>
 
             {/* Stock Indicator */}
-            <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Only {product.stock} items in stock!
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-[#0ba350] h-2 rounded-full transition-all"
-                  style={{ width: `${product.stockPercentage}%` }}
-                />
+            {product.stock > 0 ? (
+              <div className="mb-6">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Only {product.stock} items in stock!
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-[#0ba350] h-2 rounded-full transition-all"
+                    style={{ width: `${getStockPercentage()}%` }}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="mb-6">
+                <p className="text-sm font-medium text-red-600 mb-2">
+                  Out of Stock
+                </p>
+              </div>
+            )}
 
-            {/* Color Selection */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Color:{" "}
-                <span className="text-gray-900">
-                  {product.colors[selectedColor].name}
-                </span>
-              </label>
-              <div className="flex items-center gap-3">
-                {product.colors.map((color, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedColor(idx)}
-                    className={`w-16 h-16 rounded-lg border-2 overflow-hidden transition-all ${
-                      selectedColor === idx
-                        ? "border-gray-900 ring-2 ring-offset-2 ring-gray-900"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
-                  >
-                    <img
-                      src={color.image}
-                      alt={color.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+            {/* Color Selection - if color exists */}
+            {product.color && (
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Color: <span className="text-gray-900">{product.color}</span>
+                </label>
               </div>
-            </div>
+            )}
 
             {/* Quantity and Add to Cart */}
             <div className="mb-6">
@@ -205,7 +244,8 @@ export default function ShopDetailMain() {
                 <div className="flex items-center border-2 border-gray-300 rounded-lg">
                   <button
                     onClick={handleQuantityDecrease}
-                    className="p-4 hover:bg-gray-100 transition-colors"
+                    disabled={quantity <= 1}
+                    className="p-4 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Minus className="w-5 h-5" />
                   </button>
@@ -215,26 +255,33 @@ export default function ShopDetailMain() {
                     onChange={handleQuantityChange}
                     className="w-16 text-center font-semibold focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     min="1"
+                    max={product.stock}
                   />
                   <button
                     onClick={handleQuantityIncrease}
-                    className="p-4 hover:bg-gray-100 transition-colors"
+                    disabled={quantity >= product.stock}
+                    className="p-4 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
                 </div>
 
-                <button className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-900 text-gray-900 py-4 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                <button 
+                  disabled={product.stock === 0}
+                  className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-900 text-gray-900 py-4 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <ShoppingBag className="w-5 h-5" />
-                  Add To Cart
+                  {product.stock > 0 ? 'Add To Cart' : 'Out of Stock'}
                 </button>
               </div>
             </div>
 
             {/* Buy It Now */}
-            <button className="w-full bg-[#0ba350] text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-8">
-              Buy it now
-            </button>
+            {product.stock > 0 && (
+              <button className="w-full bg-[#0ba350] text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-8">
+                Buy it now
+              </button>
+            )}
 
             {/* Accordion Sections */}
             <div className="space-y-4 mb-8">
@@ -260,10 +307,7 @@ export default function ShopDetailMain() {
                 </button>
                 {openSection === "description" && (
                   <div className="p-4 pt-0 text-gray-700">
-                    <p>
-                      This is the product description. Add detailed information
-                      about the product here.
-                    </p>
+                    <p>{product.description || 'This is the product description. Add detailed information about the product here.'}</p>
                   </div>
                 )}
               </div>

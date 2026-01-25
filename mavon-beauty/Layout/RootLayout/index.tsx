@@ -10,7 +10,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isAuthPage = pathname === "/users" || pathname === "/admin" || pathname === "/products" || pathname === "/color";
+  const isAuthPage = pathname === "/users" || pathname === "/dashboard" || pathname === "/products" || pathname === "/color" || pathname === "/brand" || pathname === "/size" || pathname === "/login" || pathname === "/register";
   const isAdminPage = pathname ? pathname.startsWith("/admin") : false;
   console.log(" Current pathname:", pathname);
   console.log(" Is admin page:", isAdminPage);

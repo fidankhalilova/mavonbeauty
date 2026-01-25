@@ -10,7 +10,6 @@ interface User {
 }
 
 const API_BASE_URL = 'http://localhost:5000/api/v1';
-
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);

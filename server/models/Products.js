@@ -6,6 +6,15 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Product name is required'],
         trim: true
     },
+    description: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    images: [{
+        type: String,  // Array of image URLs
+        trim: true
+    }],
     brand: {
         type: String,
         required: [true, 'Brand is required'],
@@ -36,6 +45,11 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: [0, 'Stock cannot be negative'],
         default: 0
+    },
+    homePage: {
+        type: Boolean,
+        default: false,
+        index: true  // Index for faster queries
     }
 }, {
     timestamps: true

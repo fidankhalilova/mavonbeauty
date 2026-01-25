@@ -1,44 +1,85 @@
 "use client"
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+interface Product {
+    _id: string;
+    name: string;
+    description: string;
+    images: string[];
+    brand: string;
+    color: string;
+    size: string;
+    weight: number;
+    price: number;
+    stock: number;
+    homePage: boolean;
+}
+
+const API_BASE_URL = 'http://localhost:5000/api/v1';
 
 export default function MostPopular() {
     const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const products = [
-        {
-            name: "Neutrogena Hydro Boost Water Gel",
-            price: "From $500.00",
-            image: "https://mavon-beauty.myshopify.com/cdn/shop/files/18_2d9de600-36bb-4e80-a564-80a4e956a4f7.png?v=1686134750&width=1445",
-            hoverImage: "https://mavon-beauty.myshopify.com/cdn/shop/files/17_ebf925ce-dc42-488c-951d-974c50c1e3a4.png?v=1686134750&width=1445",
-            colors: ["#2D5F4C", "#C8D5C8", "#F5E6D3"],
-            extraColors: 3
-        },
-        {
-            name: "Cetaphil Gentle Skin Cleanser",
-            price: "From $280.00",
-            image: "https://mavon-beauty.myshopify.com/cdn/shop/files/17_ebf925ce-dc42-488c-951d-974c50c1e3a4.png?v=1686134750&width=1445",
-            hoverImage: "https://mavon-beauty.myshopify.com/cdn/shop/files/16_e8458d18-4c37-4ec0-bb3d-533d6a4a96cc.png?v=1686134750&width=1445",
-            colors: ["#F4B8A4", "#E8A89C", "#A8C9C9"],
-            extraColors: 3
-        },
-        {
-            name: "Hyaluronic Acid Moisturizer",
-            price: "From $200.00",
-            image: "https://mavon-beauty.myshopify.com/cdn/shop/files/16_e8458d18-4c37-4ec0-bb3d-533d6a4a96cc.png?v=1686134750&width=1445",
-            hoverImage: "https://mavon-beauty.myshopify.com/cdn/shop/files/19.png?v=1686134750&width=1445",
-            colors: ["#E8C4A8", "#A8C9C9", "#2D8B9C"],
-            extraColors: 2
-        },
-        {
-            name: "Luxurious Body Butter",
-            price: "From $200.00",
-            image: "https://mavon-beauty.myshopify.com/cdn/shop/files/1.png?v=1686042782&width=1445",
-            hoverImage: "https://mavon-beauty.myshopify.com/cdn/shop/files/13_27828166-3931-4e17-9026-71cd6c52e1b5.png?v=1686134749&width=1445",
-            colors: ["#E8C4A8", "#A8C9C9", "#2D8B9C"],
-            extraColors: 2
+    useEffect(() => {
+        fetchHomePageProducts();
+    }, []);
+
+    const fetchHomePageProducts = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_BASE_URL}/products?homePage=true`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setProducts(data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    // Show skeleton loading with same UI structure
+    if (loading) {
+        return (
+            <section className="py-16 px-4 md:px-8 -mt-2.5 bg-white" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+                <div className="max-w-7xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-800">
+                        Most Popular
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="animate-pulse">
+                                <div className="bg-gray-200 h-96 mb-4 rounded"></div>
+                                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // If no products, show empty state but keep UI structure
+    if (products.length === 0) {
+        return (
+            <section className="py-16 px-4 md:px-8 -mt-2.5 bg-white" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+                <div className="max-w-7xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-800">
+                        Most Popular
+                    </h2>
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No featured products available</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="py-16 px-4 md:px-8 -mt-2.5 bg-white" style={{ fontFamily: '"Montserrat", sans-serif' }}>
@@ -57,7 +98,7 @@ export default function MostPopular() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
                         {products.map((product, index) => (
-                            <div key={index} className="group">
+                            <div key={product._id} className="group">
                                 <div
                                     className="relative mb-4 overflow-hidden bg-transparent "
                                     onMouseEnter={() => setHoveredIndex(index)}
@@ -65,16 +106,34 @@ export default function MostPopular() {
                                 >
                                     <div className="h-100 w-full relative ">
                                         <img
-                                            src={product.image}
+                                            src={
+                                                product.images && product.images.length > 0
+                                                    ? `${API_BASE_URL.replace('/api/v1', '')}${product.images[0]}`
+                                                    : 'https://via.placeholder.com/400x500?text=No+Image'
+                                            }
                                             alt={product.name}
-                                            className={`w-full h-full object-cover transition-opacity duration-300 ${hoveredIndex === index ? 'opacity-0' : 'opacity-100'
-                                                }`}
+                                            className={`w-full h-full object-cover transition-opacity duration-300 ${
+                                                hoveredIndex === index ? 'opacity-0' : 'opacity-100'
+                                            }`}
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/400x500?text=No+Image';
+                                            }}
                                         />
                                         <img
-                                            src={product.hoverImage}
+                                            src={
+                                                product.images && product.images.length > 1
+                                                    ? `${API_BASE_URL.replace('/api/v1', '')}${product.images[1]}`
+                                                    : product.images && product.images.length > 0
+                                                    ? `${API_BASE_URL.replace('/api/v1', '')}${product.images[0]}`
+                                                    : 'https://via.placeholder.com/400x500?text=No+Image'
+                                            }
                                             alt={product.name}
-                                            className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${hoveredIndex === index ? 'opacity-100' : 'opacity-0'
-                                                }`}
+                                            className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${
+                                                hoveredIndex === index ? 'opacity-100' : 'opacity-0'
+                                            }`}
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/400x500?text=No+Image';
+                                            }}
                                         />
                                     </div>
                                     <button className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white hover:bg-green-200 text-black  flex items-center justify-center transition-colors shadow-lg">
@@ -86,18 +145,26 @@ export default function MostPopular() {
                                         {product.name}
                                     </h3>
                                     <p className="text-gray-900 font-semibold mb-3 text-[19px]">
-                                        {product.price}
+                                        From ${product.price.toFixed(2)}
                                     </p>
                                     <div className="flex items-center justify-left gap-2">
-                                        {product.colors.map((color, colorIndex) => (
-                                            <button
-                                                key={colorIndex}
-                                                className="w-6 h-6 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                                                style={{ backgroundColor: color }}
-                                            />
-                                        ))}
-                                        {product.extraColors > 0 && (
-                                            <span className="text-sm text-gray-600">+{product.extraColors}</span>
+                                        {/* Show brand as a color badge if available */}
+                                        {product.brand && (
+                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                                {product.brand}
+                                            </span>
+                                        )}
+                                        {/* Show color info if available */}
+                                        {product.color && (
+                                            <span className="text-xs text-gray-600">
+                                                {product.color}
+                                            </span>
+                                        )}
+                                        {/* Show image count as extra colors */}
+                                        {product.images && product.images.length > 3 && (
+                                            <span className="text-sm text-gray-600">
+                                                +{product.images.length - 3}
+                                            </span>
                                         )}
                                     </div>
                                 </div>
