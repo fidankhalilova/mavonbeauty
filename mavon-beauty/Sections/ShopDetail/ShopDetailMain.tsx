@@ -24,7 +24,7 @@ interface Product {
   homePage: boolean;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = "http://localhost:3001/api/v1";
 
 export default function ShopDetailMain() {
   const params = useParams();
@@ -49,15 +49,15 @@ export default function ShopDetailMain() {
       setError(null);
       const response = await fetch(`${API_BASE_URL}/products/${productId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setProduct(data.data);
       } else {
-        setError('Product not found');
+        setError("Product not found");
       }
     } catch (error) {
-      console.error('Error fetching product:', error);
-      setError('Failed to load product');
+      console.error("Error fetching product:", error);
+      setError("Failed to load product");
     } finally {
       setLoading(false);
     }
@@ -113,17 +113,25 @@ export default function ShopDetailMain() {
   if (error || !product) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-xl text-gray-600 mb-4">{error || 'Product not found'}</p>
-        <a href="/shop" className="text-emerald-600 hover:text-emerald-700 underline">
+        <p className="text-xl text-gray-600 mb-4">
+          {error || "Product not found"}
+        </p>
+        <a
+          href="/shop"
+          className="text-emerald-600 hover:text-emerald-700 underline"
+        >
           Back to Shop
         </a>
       </div>
     );
   }
 
-  const productImages = product.images && product.images.length > 0
-    ? product.images.map(img => `${API_BASE_URL.replace('/api/v1', '')}${img}`)
-    : ['https://via.placeholder.com/600x600?text=No+Image'];
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images.map(
+          (img) => `${API_BASE_URL.replace("/api/v1", "")}${img}`,
+        )
+      : ["https://via.placeholder.com/600x600?text=No+Image"];
 
   const mainImage = productImages[selectedImageIndex] || productImages[0];
 
@@ -140,7 +148,8 @@ export default function ShopDetailMain() {
                 alt={product.name}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  e.currentTarget.src = 'https://via.placeholder.com/600x600?text=No+Image';
+                  e.currentTarget.src =
+                    "https://via.placeholder.com/600x600?text=No+Image";
                 }}
               />
             </div>
@@ -163,7 +172,8 @@ export default function ShopDetailMain() {
                       alt={`${product.name} ${index + 2}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/300x300?text=No+Image";
                       }}
                     />
                   </button>
@@ -187,7 +197,8 @@ export default function ShopDetailMain() {
 
             {/* SKU */}
             <p className="text-gray-600 mb-4">
-              <span className="font-semibold">Sku:</span> {product._id.slice(-6).toUpperCase()}
+              <span className="font-semibold">Sku:</span>{" "}
+              {product._id.slice(-6).toUpperCase()}
             </p>
 
             {/* Product Title */}
@@ -266,12 +277,12 @@ export default function ShopDetailMain() {
                   </button>
                 </div>
 
-                <button 
+                <button
                   disabled={product.stock === 0}
                   className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-900 text-gray-900 py-4 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ShoppingBag className="w-5 h-5" />
-                  {product.stock > 0 ? 'Add To Cart' : 'Out of Stock'}
+                  {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
                 </button>
               </div>
             </div>
@@ -307,7 +318,10 @@ export default function ShopDetailMain() {
                 </button>
                 {openSection === "description" && (
                   <div className="p-4 pt-0 text-gray-700">
-                    <p>{product.description || 'This is the product description. Add detailed information about the product here.'}</p>
+                    <p>
+                      {product.description ||
+                        "This is the product description. Add detailed information about the product here."}
+                    </p>
                   </div>
                 )}
               </div>

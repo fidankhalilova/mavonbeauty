@@ -45,7 +45,7 @@ interface Size {
   category: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = "http://localhost:3001/api/v1";
 
 export default function ShopMain() {
   const router = useRouter();
@@ -65,14 +65,14 @@ export default function ShopMain() {
   const [colors, setColors] = useState<Color[]>([]);
   const [sizes, setSizes] = useState<Size[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filter states
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [outOfStockOnly, setOutOfStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState('date-new');
+  const [sortBy, setSortBy] = useState("date-new");
 
   useEffect(() => {
     fetchProducts();
@@ -83,18 +83,27 @@ export default function ShopMain() {
 
   useEffect(() => {
     applyFilters();
-  }, [allProducts, selectedBrands, selectedColors, selectedSizes, inStockOnly, outOfStockOnly, priceRange, sortBy]);
+  }, [
+    allProducts,
+    selectedBrands,
+    selectedColors,
+    selectedSizes,
+    inStockOnly,
+    outOfStockOnly,
+    priceRange,
+    sortBy,
+  ]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/products?homePage=false`);
       const data = await response.json();
-      
+
       if (data.success) {
         setAllProducts(data.data || []);
         setFilteredProducts(data.data || []);
-        
+
         // Set max price
         if (data.data && data.data.length > 0) {
           const maxPrice = Math.max(...data.data.map((p: Product) => p.price));
@@ -102,7 +111,7 @@ export default function ShopMain() {
         }
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +123,7 @@ export default function ShopMain() {
       const data = await response.json();
       if (data.success) setBrands(data.data || []);
     } catch (error) {
-      console.error('Error fetching brands:', error);
+      console.error("Error fetching brands:", error);
     }
   };
 
@@ -124,7 +133,7 @@ export default function ShopMain() {
       const data = await response.json();
       if (data.success) setColors(data.data || []);
     } catch (error) {
-      console.error('Error fetching colors:', error);
+      console.error("Error fetching colors:", error);
     }
   };
 
@@ -134,7 +143,7 @@ export default function ShopMain() {
       const data = await response.json();
       if (data.success) setSizes(data.data || []);
     } catch (error) {
-      console.error('Error fetching sizes:', error);
+      console.error("Error fetching sizes:", error);
     }
   };
 
@@ -143,48 +152,50 @@ export default function ShopMain() {
 
     // Brand filter
     if (selectedBrands.length > 0) {
-      filtered = filtered.filter(p => selectedBrands.includes(p.brand));
+      filtered = filtered.filter((p) => selectedBrands.includes(p.brand));
     }
 
     // Color filter
     if (selectedColors.length > 0) {
-      filtered = filtered.filter(p => selectedColors.includes(p.color));
+      filtered = filtered.filter((p) => selectedColors.includes(p.color));
     }
 
     // Size filter
     if (selectedSizes.length > 0) {
-      filtered = filtered.filter(p => selectedSizes.includes(p.size));
+      filtered = filtered.filter((p) => selectedSizes.includes(p.size));
     }
 
     // Availability filter
     if (inStockOnly) {
-      filtered = filtered.filter(p => p.stock > 0);
+      filtered = filtered.filter((p) => p.stock > 0);
     }
     if (outOfStockOnly) {
-      filtered = filtered.filter(p => p.stock === 0);
+      filtered = filtered.filter((p) => p.stock === 0);
     }
 
     // Price filter
-    filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    filtered = filtered.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
+    );
 
     // Sorting
-    switch(sortBy) {
-      case 'name-asc':
+    switch (sortBy) {
+      case "name-asc":
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case 'name-desc':
+      case "name-desc":
         filtered.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case 'price-asc':
+      case "price-asc":
         filtered.sort((a, b) => a.price - b.price);
         break;
-      case 'price-desc':
+      case "price-desc":
         filtered.sort((a, b) => b.price - a.price);
         break;
-      case 'date-new':
+      case "date-new":
         filtered.reverse();
         break;
-      case 'date-old':
+      case "date-old":
         // Keep original order
         break;
     }
@@ -193,26 +204,26 @@ export default function ShopMain() {
   };
 
   const toggleBrand = (brandName: string) => {
-    setSelectedBrands(prev => 
-      prev.includes(brandName) 
-        ? prev.filter(b => b !== brandName)
-        : [...prev, brandName]
+    setSelectedBrands((prev) =>
+      prev.includes(brandName)
+        ? prev.filter((b) => b !== brandName)
+        : [...prev, brandName],
     );
   };
 
   const toggleColor = (colorName: string) => {
-    setSelectedColors(prev => 
-      prev.includes(colorName) 
-        ? prev.filter(c => c !== colorName)
-        : [...prev, colorName]
+    setSelectedColors((prev) =>
+      prev.includes(colorName)
+        ? prev.filter((c) => c !== colorName)
+        : [...prev, colorName],
     );
   };
 
   const toggleSize = (sizeName: string) => {
-    setSelectedSizes(prev => 
-      prev.includes(sizeName) 
-        ? prev.filter(s => s !== sizeName)
-        : [...prev, sizeName]
+    setSelectedSizes((prev) =>
+      prev.includes(sizeName)
+        ? prev.filter((s) => s !== sizeName)
+        : [...prev, sizeName],
     );
   };
 
@@ -231,41 +242,51 @@ export default function ShopMain() {
   };
 
   // Transform products for ProductCard
-  const transformedProducts = filteredProducts.map(product => ({
+  const transformedProducts = filteredProducts.map((product) => ({
     id: product._id,
     name: product.name,
     price: product.price,
-    image: product.images && product.images.length > 0 
-      ? `${API_BASE_URL.replace('/api/v1', '')}${product.images[0]}`
-      : 'https://via.placeholder.com/600x600?text=No+Image',
-    colors: colors.filter(c => c.name === product.color).map(c => c.hexCode).slice(0, 3),
+    image:
+      product.images && product.images.length > 0
+        ? `${API_BASE_URL.replace("/api/v1", "")}${product.images[0]}`
+        : "https://via.placeholder.com/600x600?text=No+Image",
+    colors: colors
+      .filter((c) => c.name === product.color)
+      .map((c) => c.hexCode)
+      .slice(0, 3),
     moreColors: colors.length > 3 ? colors.length - 3 : 0,
     showWishlist: true,
-    description: product.description || '',
-    colorOptions: colors.map(c => ({ name: c.name, hex: c.hexCode })),
-    weightOptions: sizes.map(s => s.name),
-    badge: product.stock > 0 ? (product.stock < 10 ? 'Low Stock' : '') : 'Out of Stock',
+    description: product.description || "",
+    colorOptions: colors.map((c) => ({ name: c.name, hex: c.hexCode })),
+    weightOptions: sizes.map((s) => s.name),
+    badge:
+      product.stock > 0
+        ? product.stock < 10
+          ? "Low Stock"
+          : ""
+        : "Out of Stock",
   }));
 
   // Counts
-  const inStockCount = allProducts.filter(p => p.stock > 0).length;
-  const outOfStockCount = allProducts.filter(p => p.stock === 0).length;
-  const brandCounts = brands.map(brand => ({
+  const inStockCount = allProducts.filter((p) => p.stock > 0).length;
+  const outOfStockCount = allProducts.filter((p) => p.stock === 0).length;
+  const brandCounts = brands.map((brand) => ({
     name: brand.name,
-    count: allProducts.filter(p => p.brand === brand.name).length
+    count: allProducts.filter((p) => p.brand === brand.name).length,
   }));
-  const colorCounts = colors.map(color => ({
+  const colorCounts = colors.map((color) => ({
     ...color,
-    count: allProducts.filter(p => p.color === color.name).length
+    count: allProducts.filter((p) => p.color === color.name).length,
   }));
-  const sizeCounts = sizes.map(size => ({
+  const sizeCounts = sizes.map((size) => ({
     ...size,
-    count: allProducts.filter(p => p.size === size.name).length
+    count: allProducts.filter((p) => p.size === size.name).length,
   }));
 
-  const maxPrice = allProducts.length > 0 
-    ? Math.max(...allProducts.map(p => p.price))
-    : 1500;
+  const maxPrice =
+    allProducts.length > 0
+      ? Math.max(...allProducts.map((p) => p.price))
+      : 1500;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -303,7 +324,7 @@ export default function ShopMain() {
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <span className="text-sm font-medium">Sort by:</span>
-          <select 
+          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
@@ -355,7 +376,9 @@ export default function ShopMain() {
                       />
                       <span className="text-sm">In stock</span>
                     </div>
-                    <span className="text-sm text-gray-500">({inStockCount})</span>
+                    <span className="text-sm text-gray-500">
+                      ({inStockCount})
+                    </span>
                   </label>
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-3">
@@ -368,11 +391,15 @@ export default function ShopMain() {
                         }}
                         className="w-4 h-4 rounded border-gray-300"
                       />
-                      <span className={`text-sm ${outOfStockCount === 0 ? 'text-gray-400' : ''}`}>
+                      <span
+                        className={`text-sm ${outOfStockCount === 0 ? "text-gray-400" : ""}`}
+                      >
                         Out of stock
                       </span>
                     </div>
-                    <span className={`text-sm ${outOfStockCount === 0 ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-sm ${outOfStockCount === 0 ? "text-gray-400" : "text-gray-500"}`}
+                    >
                       ({outOfStockCount})
                     </span>
                   </label>
@@ -433,7 +460,10 @@ export default function ShopMain() {
               {openSections.color && (
                 <div className="space-y-3">
                   {colorCounts.map((color) => (
-                    <label key={color._id} className="flex items-center justify-between cursor-pointer">
+                    <label
+                      key={color._id}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
@@ -442,14 +472,16 @@ export default function ShopMain() {
                           className="w-4 h-4 rounded border-gray-300"
                         />
                         <div className="flex items-center gap-2">
-                          <div 
+                          <div
                             className="w-4 h-4 rounded-full border border-gray-300"
                             style={{ backgroundColor: color.hexCode }}
                           />
                           <span className="text-sm">{color.name}</span>
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500">({color.count})</span>
+                      <span className="text-sm text-gray-500">
+                        ({color.count})
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -472,7 +504,10 @@ export default function ShopMain() {
               {openSections.brand && (
                 <div className="space-y-3">
                   {brandCounts.map((brand, index) => (
-                    <label key={index} className="flex items-center justify-between cursor-pointer">
+                    <label
+                      key={index}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
@@ -482,7 +517,9 @@ export default function ShopMain() {
                         />
                         <span className="text-sm">{brand.name}</span>
                       </div>
-                      <span className="text-sm text-gray-500">({brand.count})</span>
+                      <span className="text-sm text-gray-500">
+                        ({brand.count})
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -505,7 +542,10 @@ export default function ShopMain() {
               {openSections.weight && (
                 <div className="space-y-3">
                   {sizeCounts.map((size) => (
-                    <label key={size._id} className="flex items-center justify-between cursor-pointer">
+                    <label
+                      key={size._id}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
@@ -515,7 +555,9 @@ export default function ShopMain() {
                         />
                         <span className="text-sm">{size.name}</span>
                       </div>
-                      <span className="text-sm text-gray-500">({size.count})</span>
+                      <span className="text-sm text-gray-500">
+                        ({size.count})
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -532,13 +574,15 @@ export default function ShopMain() {
             </div>
           ) : transformedProducts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No products found matching your filters</p>
+              <p className="text-gray-500">
+                No products found matching your filters
+              </p>
             </div>
           ) : (
             <div className={`grid ${getGridClass()} gap-6`}>
               {transformedProducts.map((product) => (
                 <div key={product.id}>
-                  <ProductCard 
+                  <ProductCard
                     product={product}
                     onProductClick={() => handleProductClick(product.id)}
                   />

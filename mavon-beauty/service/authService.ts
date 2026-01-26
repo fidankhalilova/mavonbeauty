@@ -167,10 +167,27 @@ export const registerUser = async (
 };
 
 export const logoutUser = () => {
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("user");
+  // Clear localStorage
   localStorage.removeItem("token");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
+
+  // Clear sessionStorage
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("refreshToken");
+  sessionStorage.removeItem("user");
+
+  // Clear cookies (if you set them)
+  document.cookie.split(";").forEach((cookie) => {
+    const [name] = cookie.trim().split("=");
+    if (name.includes("token") || name.includes("auth")) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    }
+  });
+
+  console.log("All tokens cleared from storage");
 };
 
 export const getCurrentUser = () => {
