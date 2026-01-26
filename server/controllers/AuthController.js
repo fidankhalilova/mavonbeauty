@@ -452,7 +452,7 @@ const ResetPassword = async (req, res) => {
 // ========== VERIFY RESET TOKEN ==========
 const VerifyResetToken = async (req, res) => {
     try {
-        const { token } = req.params;
+        const { token } = req.query;
 
         if (!token) {
             return res.status(400).json({
@@ -461,13 +461,13 @@ const VerifyResetToken = async (req, res) => {
             });
         }
 
-        // Hash the token
+        // Hash the token to compare with stored hash
         const resetTokenHash = crypto
             .createHash('sha256')
             .update(token)
             .digest('hex');
 
-        // Check if token is valid and not expired
+        // Find user with valid token
         const user = await UserModel.findOne({
             resetPasswordToken: resetTokenHash,
             resetPasswordExpires: { $gt: Date.now() }
@@ -489,7 +489,7 @@ const VerifyResetToken = async (req, res) => {
         console.error('Verify token error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error"
+            message: "Server error. Please try again."
         });
     }
 };

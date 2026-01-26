@@ -43,14 +43,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Use the auth router (routes are exactly the same, just moved to separate file)
-app.use('/api/v1/auth', authRouter);
-
-app.listen(PORT, () => {
-    console.log(`Server ${PORT} portunda işləyir`);
-});
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.use('/api/v1/auth', authRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/brands", brandRouter);
 app.use("/api/v1/colors", colorRouter);
@@ -58,8 +53,8 @@ app.use("/api/v1/sizes", sizeRouter);
 
 
 app.get('/api/v1/health', (req, res) => {
-    res.status(200).json({ 
-        success: true, 
+    res.status(200).json({
+        success: true,
         message: 'Server is running',
         timestamp: new Date().toISOString()
     });
@@ -68,17 +63,17 @@ app.get('/api/v1/health', (req, res) => {
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ 
-        success: false, 
+    res.status(500).json({
+        success: false,
         message: err.message || 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
 app.use((req, res) => {
-    res.status(404).json({ 
-        success: false, 
-        message: 'Route not found' 
+    res.status(404).json({
+        success: false,
+        message: 'Route not found'
     });
 });
 
