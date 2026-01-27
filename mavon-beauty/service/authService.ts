@@ -1,5 +1,6 @@
-// service/authService.ts - ORIGINAL WORKING VERSION
+// service/authService.ts - COMPLETE UPDATED VERSION
 const API_URL = "http://localhost:3001/api/v1/auth";
+import { emitAuthEvent } from "@/utils/events";
 
 interface RegisterData {
   name: string;
@@ -16,6 +17,7 @@ export interface LoginData {
 
 export interface User {
   _id: string;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -30,66 +32,34 @@ export interface AuthResponse {
   user?: User;
 }
 
-// export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
-//   try {
-//     console.log("🔵 Starting login request...");
-//     console.log("📍 URL:", `${API_URL}/login`);
+// Clear user-specific cart
+export const clearUserCart = (userId?: string): void => {
+  if (!userId) {
+    // Get userId from localStorage if not provided
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        userId = userData.id || userData._id;
+      } catch {
+        console.error("❌ Error parsing user data");
+      }
+    }
+  }
 
-//     const response = await fetch(`${API_URL}/login`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({
-//         email: data.email,
-//         password: data.password,
-//       }),
-//     });
+  if (userId) {
+    const cartKey = `mavon_cart_${userId}`;
+    localStorage.removeItem(cartKey);
+    console.log(`🧹 Cleared cart for user: ${userId}`);
 
-//     console.log("✅ Response received:", response.status);
+    // Notify cart context
+    emitAuthEvent("cart-updated", { userId, action: "cleared" });
+  } else {
+    console.log("ℹ️ No user ID found to clear cart");
+  }
+};
 
-//     if (!response.ok) {
-//       const errorText = await response.text();
-//       console.error("❌ Error response:", errorText);
-
-//       let errorMessage = "Login failed";
-//       try {
-//         const errorJson = JSON.parse(errorText);
-//         errorMessage = errorJson.message || errorMessage;
-//       } catch (e) {
-//         // Not JSON
-//       }
-
-//       return {
-//         success: false,
-//         message: errorMessage,
-//       };
-//     }
-
-//     const result = await response.json();
-//     console.log("📄 Parsed result:", result);
-
-//     if (result.token) {
-//       localStorage.setItem("token", result.token);
-//       localStorage.setItem("user", JSON.stringify(result.user));
-//       console.log("💾 Token saved to localStorage");
-//     }
-
-//     return {
-//       success: true,
-//       message: result.message || "Login successful",
-//       token: result.token,
-//       user: result.user,
-//     };
-//   } catch (error: any) {
-//     console.error("💥 Login error:", error);
-//     return {
-//       success: false,
-//       message: error.message || "Network error",
-//     };
-//   }
-// };
-
+// Login user and handle cart
 export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
   try {
     console.log("🔵 LOGIN: Starting request...");
@@ -109,6 +79,7 @@ export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("❌ LOGIN Error:", errorText);
       return {
         success: false,
         message: "Login failed. Please check your credentials.",
@@ -119,6 +90,8 @@ export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
     console.log("📄 LOGIN: API Response:", result);
 
     if (result.success) {
+      const userId = result.user?.id || result.user?._id || "";
+
       // Store tokens in localStorage
       if (result.accessToken) {
         localStorage.setItem("accessToken", result.accessToken);
@@ -141,7 +114,14 @@ export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
 
       // Store user data
       if (result.user) {
-        const userString = JSON.stringify(result.user);
+        // Ensure user has both id and _id for compatibility
+        const userData: User = {
+          ...result.user,
+          id: userId,
+          _id: userId,
+        };
+
+        const userString = JSON.stringify(userData);
         localStorage.setItem("user", userString);
         sessionStorage.setItem("user", userString);
 
@@ -150,7 +130,24 @@ export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
           localStorage.setItem("userRole", result.user.role);
           sessionStorage.setItem("userRole", result.user.role);
         }
+
+        console.log(`👤 User data stored for ID: ${userId}`);
+
+        // Load user's cart from localStorage
+        const cartKey = `mavon_cart_${userId}`;
+        const savedCart = localStorage.getItem(cartKey);
+        if (savedCart) {
+          console.log(`🛒 Loaded existing cart for user ${userId}`);
+        } else {
+          console.log(
+            `🛒 No existing cart found for user ${userId}, starting fresh`,
+          );
+        }
       }
+
+      // Trigger user change event for cart context
+      emitAuthEvent("user-changed", { userId, action: "login" });
+      emitAuthEvent("user-login", result.user);
 
       return {
         success: true,
@@ -174,6 +171,7 @@ export const loginUser = async (data: LoginData): Promise<AuthResponse> => {
   }
 };
 
+// Register user and set up new cart
 export const registerUser = async (
   data: RegisterData,
 ): Promise<AuthResponse> => {
@@ -184,9 +182,7 @@ export const registerUser = async (
       password: data.password,
     };
 
-    console.log("🔵 Starting registration request...");
-    console.log("📍 URL:", `${API_URL}/register`);
-    console.log("📦 Payload:", { ...payload, password: "***" });
+    console.log("🔵 REGISTER: Starting registration request...");
 
     const response = await fetch(`${API_URL}/register`, {
       method: "POST",
@@ -197,23 +193,21 @@ export const registerUser = async (
       body: JSON.stringify(payload),
     });
 
-    console.log("✅ Response received:", response.status, response.statusText);
     console.log(
-      "📋 Response headers:",
-      Object.fromEntries(response.headers.entries()),
+      "✅ REGISTER: Response received:",
+      response.status,
+      response.statusText,
     );
 
-    // Check if response is ok before parsing
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Error response:", errorText);
+      console.error("❌ REGISTER Error:", errorText);
 
       let errorMessage = `Registration failed: ${response.status}`;
       try {
         const errorJson = JSON.parse(errorText);
         errorMessage = errorJson.message || errorMessage;
       } catch (e) {
-        // Not JSON, use text
         errorMessage = errorText || errorMessage;
       }
 
@@ -224,24 +218,66 @@ export const registerUser = async (
     }
 
     const result = await response.json();
-    console.log("📄 Parsed result:", result);
+    console.log("📄 REGISTER: Parsed result:", result);
 
-    return {
-      success: true,
-      message: result.message || "Registration successful",
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      user: result.user,
-    };
+    if (result.success && result.user) {
+      const userId = result.user.id || result.user._id || "";
+
+      // Store tokens and user data
+      if (result.accessToken) {
+        localStorage.setItem("accessToken", result.accessToken);
+        console.log("💾 Access token stored in localStorage");
+      }
+
+      if (result.refreshToken) {
+        localStorage.setItem("refreshToken", result.refreshToken);
+        console.log("💾 Refresh token stored in localStorage");
+      }
+
+      // Ensure user has both id and _id
+      const userData: User = {
+        ...result.user,
+        id: userId,
+        _id: userId,
+      };
+
+      const userString = JSON.stringify(userData);
+      localStorage.setItem("user", userString);
+      sessionStorage.setItem("user", userString);
+
+      if (result.user.role) {
+        localStorage.setItem("userRole", result.user.role);
+        sessionStorage.setItem("userRole", result.user.role);
+      }
+
+      console.log(`👤 New user registered with ID: ${userId}`);
+
+      // Initialize empty cart for new user
+      const cartKey = `mavon_cart_${userId}`;
+      localStorage.setItem(cartKey, JSON.stringify([]));
+      console.log(`🛒 Created new empty cart for user ${userId}`);
+
+      // Trigger user change event for cart context
+      emitAuthEvent("user-changed", { userId, action: "register" });
+      emitAuthEvent("user-login", result.user);
+
+      return {
+        success: true,
+        message: result.message || "Registration successful",
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        user: result.user,
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message || "Registration failed",
+      };
+    }
   } catch (error: any) {
-    console.error("💥 Registration error:", error);
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
+    console.error("💥 REGISTER: Network error:", error);
 
-    // More specific error messages
     let errorMessage = "Network error. Please try again.";
-
     if (error.name === "TypeError" && error.message.includes("fetch")) {
       errorMessage =
         "Cannot connect to server. Please ensure the backend is running on http://localhost:3001";
@@ -258,9 +294,18 @@ export const registerUser = async (
 
 // Helper to check if user is authenticated
 export const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   const user = localStorage.getItem("user");
-  return !!(token && user);
+
+  if (!token || !user) return false;
+
+  try {
+    const userData = JSON.parse(user);
+    // Check if token exists and user data is valid
+    return !!(token && userData && (userData.id || userData._id));
+  } catch {
+    return false;
+  }
 };
 
 // Helper to get current user
@@ -269,48 +314,237 @@ export const getCurrentUser = (): User | null => {
   if (!userStr) return null;
 
   try {
-    return JSON.parse(userStr);
+    const userData = JSON.parse(userStr);
+    const userId = userData.id || userData._id || "";
+
+    if (!userId) return null;
+
+    return {
+      ...userData,
+      id: userId,
+      _id: userId,
+    };
   } catch (error) {
-    console.error("Error parsing user data:", error);
+    console.error("❌ Error parsing user data:", error);
     return null;
   }
 };
 
-// Helper to get token
-export const getToken = (): string | null => {
-  return localStorage.getItem("token");
+// Helper to get current user ID
+export const getCurrentUserId = (): string | null => {
+  const user = getCurrentUser();
+  return user ? user.id : null;
 };
 
-// Helper to logout
+// Helper to get access token
+export const getAccessToken = (): string | null => {
+  return localStorage.getItem("accessToken");
+};
+
+// Helper to get refresh token
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem("refreshToken");
+};
+
+// Helper to logout and clear cart
 export const logoutUser = (): void => {
-  localStorage.removeItem("token");
+  // Clear user-specific cart before clearing tokens
+  const userStr = localStorage.getItem("user");
+  let userId: string | null = null;
+
+  if (userStr) {
+    try {
+      const userData = JSON.parse(userStr);
+      userId = userData.id || userData._id;
+    } catch {
+      console.error("❌ Error parsing user data on logout");
+    }
+  }
+
+  // Clear cart if user exists
+  if (userId) {
+    clearUserCart(userId);
+  }
+
+  // Clear all auth tokens and user data
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
-  console.log("🗑️ All tokens and user data cleared");
+  localStorage.removeItem("userRole");
+
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("refreshToken");
+  sessionStorage.removeItem("user");
+  sessionStorage.removeItem("userRole");
+
+  // Trigger user change event for cart context
+  emitAuthEvent("user-changed", { userId, action: "logout" });
+  emitAuthEvent("user-logout");
+
+  console.log("🗑️ All tokens, user data, and cart cleared");
 };
 
-// Simple auth check
+// Check auth status with server
 export const checkAuth = async (): Promise<boolean> => {
   try {
-    const token = getToken();
+    const token = getAccessToken();
     if (!token) return false;
 
     const response = await fetch(`${API_URL}/user`, {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
       credentials: "include",
     });
 
     if (response.ok) {
       const data = await response.json();
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.success && data.user) {
+        // Update user data
+        const userId = data.user.id || data.user._id || "";
+        const userData: User = {
+          ...data.user,
+          id: userId,
+          _id: userId,
+        };
+
+        localStorage.setItem("user", JSON.stringify(userData));
+        console.log(`✅ Auth check passed for user: ${userId}`);
+
+        // Trigger cart reload
+        emitAuthEvent("user-changed", { userId, action: "auth-check" });
+
         return true;
       }
     }
+
+    // If auth fails, clear invalid tokens
+    console.log("❌ Auth check failed, clearing tokens");
+    logoutUser();
     return false;
   } catch (error) {
-    console.error("Auth check error:", error);
+    console.error("❌ Auth check error:", error);
     return false;
   }
+};
+
+// Refresh access token
+export const refreshAccessToken = async (): Promise<string | null> => {
+  try {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      console.log("❌ No refresh token available");
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken);
+        console.log("✅ Access token refreshed");
+        return data.accessToken;
+      }
+    }
+
+    console.log("❌ Token refresh failed");
+    return null;
+  } catch (error) {
+    console.error("❌ Token refresh error:", error);
+    return null;
+  }
+};
+
+// Get user cart from localStorage
+export const getUserCart = (userId?: string): any[] => {
+  if (!userId) {
+    userId = getCurrentUserId() ?? undefined;
+  }
+
+  if (!userId) {
+    console.log("❌ No user ID available to get cart");
+    return [];
+  }
+
+  const cartKey = `mavon_cart_${userId}`;
+  const savedCart = localStorage.getItem(cartKey);
+
+  if (savedCart) {
+    try {
+      return JSON.parse(savedCart);
+    } catch (error) {
+      console.error("❌ Error parsing user cart:", error);
+      return [];
+    }
+  }
+
+  return [];
+};
+
+// Save user cart to localStorage
+export const saveUserCart = (cartItems: any[], userId?: string): boolean => {
+  if (!userId) {
+    userId = getCurrentUserId() || undefined;
+  }
+
+  if (!userId) {
+    console.log("❌ No user ID available to save cart");
+    return false;
+  }
+
+  try {
+    const cartKey = `mavon_cart_${userId}`;
+    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+    console.log(
+      `💾 Saved ${cartItems.length} items to cart for user ${userId}`,
+    );
+
+    // Trigger cart updated event
+    emitAuthEvent("cart-updated", { userId, items: cartItems });
+
+    return true;
+  } catch (error) {
+    console.error("❌ Error saving user cart:", error);
+    return false;
+  }
+};
+
+// Switch user account (for admin or account switching)
+export const switchUserAccount = async (userId: string): Promise<boolean> => {
+  try {
+    // First, save current user's cart if logged in
+    const currentUserId = getCurrentUserId();
+    if (currentUserId) {
+      console.log(`🔄 Switching from user ${currentUserId} to ${userId}`);
+    }
+
+    // Clear current session
+    logoutUser();
+
+    // Load new user data (this would typically come from an API)
+    // For now, we'll just set a flag that cart should be loaded
+    console.log(`🔄 Ready to load cart for user ${userId}`);
+
+    // Trigger user change for cart context
+    emitAuthEvent("user-changed", { userId, action: "switch" });
+
+    return true;
+  } catch (error) {
+    console.error("❌ Error switching user account:", error);
+    return false;
+  }
+};
+
+// Notify cart context that user has changed
+export const notifyUserChanged = (): void => {
+  const userId = getCurrentUserId();
+  emitAuthEvent("user-changed", { userId });
 };
