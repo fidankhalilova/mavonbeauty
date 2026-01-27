@@ -11,8 +11,14 @@ const {
     ForgotPassword,
     ResetPassword,
     RefreshToken,
-    VerifyResetToken
+    VerifyResetToken,
+    UpdateUserRole,
+    GetCurrentUser
 } = require('../controllers/AuthController');
+const adminMiddleware = require('../middleware/adminMiddleware');
+
+// Import the combined authMiddleware
+const { authMiddleware, authorizeRoles } = require('../middleware/authMiddleware');
 
 // ========== AUTH ROUTES ==========
 // GitHub OAuth
@@ -34,24 +40,32 @@ router.post('/refresh-token', RefreshToken);
 router.get('/verify-reset-token', VerifyResetToken);
 
 // User management
-router.get('/users', GetAllUsersController);
-router.delete('/users/:id', DeleteUserController);
-router.put('/users/:id', UpdateUserController);
+router.get('/users', authMiddleware, authorizeRoles('admin'), GetAllUsersController);
+router.delete('/users/:id', authMiddleware, authorizeRoles('admin'), DeleteUserController);
+router.put('/users/:id', authMiddleware, UpdateUserController);
+router.put('/users/:id/role', authMiddleware, authorizeRoles('admin'), UpdateUserRole);
 
-// Session user
-router.get('/user', (req, res) => {
+// Get current user - use the combined authMiddleware
+router.get('/user', authMiddleware, GetCurrentUser);
+
+// Session user (fallback for passport sessions)
+router.get('/session-user', (req, res) => {
     if (req.isAuthenticated()) {
         res.json({
+            success: true,
             user: {
                 id: req.user.id,
                 username: req.user.username,
                 displayName: req.user.displayName,
-                avatar: req.user.photos[0]?.value,
+                avatar: req.user.photos?.[0]?.value,
                 profileUrl: req.user.profileUrl
             }
         });
     } else {
-        res.status(401).json({ message: 'Not authenticated' });
+        res.status(401).json({
+            success: false,
+            message: 'Not authenticated'
+        });
     }
 });
 
@@ -59,9 +73,29 @@ router.get('/user', (req, res) => {
 router.get('/logout', (req, res) => {
     req.logout((err) => {
         if (err) {
-            return res.status(500).json({ message: 'Logout error' });
+            return res.status(500).json({
+                success: false,
+                message: 'Logout error'
+            });
         }
-        res.json({ message: 'Logged out successfully' });
+        // Clear cookies if using JWT
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    });
+});
+
+// Test endpoint to verify middleware is working
+router.get('/test-auth', authMiddleware, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Authentication successful!',
+        user: req.user,
+        isAuthenticated: req.isAuthenticated,
+        newTokenIssued: req.newTokenIssued || false
     });
 });
 

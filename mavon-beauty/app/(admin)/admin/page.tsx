@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Users, Package, Sparkles, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/service/authService";
 
 interface User {
   _id: string;
@@ -21,14 +23,29 @@ export default function DashboardPage() {
     totalProducts: 0,
     totalStock: 0,
   });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/auth/users`);
+      const accessToken =
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken");
+      if (!accessToken) {
+        setError("No access token found");
+        return;
+      }
+      const response = await fetch(`${API_BASE_URL}/auth/users`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -61,6 +78,116 @@ export default function DashboardPage() {
     fetchUsers();
     fetchStats();
   }, []);
+
+  // app/admin/page.tsx - Updated useEffect
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        // First check localStorage/sessionStorage
+        const userStr =
+          localStorage.getItem("user") || sessionStorage.getItem("user");
+        const accessToken =
+          localStorage.getItem("accessToken") ||
+          sessionStorage.getItem("accessToken");
+
+        if (!userStr || !accessToken) {
+          console.log("❌ No user or token found");
+          router.push("/login");
+          return;
+        }
+
+        const localUser = JSON.parse(userStr);
+        console.log("👑 Local user role:", localUser.role);
+
+        if (localUser.role !== "admin") {
+          console.log("❌ User is not admin");
+          router.push("/");
+          return;
+        }
+
+        // Verify with backend
+        console.log("🔐 Verifying token with backend...");
+        const response = await fetch("http://localhost:3001/api/v1/auth/user", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        console.log("✅ Response status:", response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("✅ Backend response:", data);
+
+          if (data.success && data.user) {
+            // Update local storage with fresh data
+            localStorage.setItem("user", JSON.stringify(data.user));
+            sessionStorage.setItem("user", JSON.stringify(data.user));
+            setUser(data.user);
+          } else {
+            setUser(localUser);
+          }
+        } else {
+          console.log("❌ Token verification failed");
+
+          // Try to refresh token
+          const refreshToken =
+            localStorage.getItem("refreshToken") ||
+            sessionStorage.getItem("refreshToken");
+
+          if (refreshToken) {
+            console.log("🔄 Attempting token refresh...");
+            const refreshResponse = await fetch(
+              "http://localhost:3001/api/v1/auth/refresh-token",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ refreshToken }),
+              },
+            );
+
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              console.log("🔄 Token refresh successful");
+
+              // Store new tokens
+              localStorage.setItem("accessToken", refreshData.accessToken);
+              sessionStorage.setItem("accessToken", refreshData.accessToken);
+
+              if (refreshData.user) {
+                localStorage.setItem("user", JSON.stringify(refreshData.user));
+                sessionStorage.setItem(
+                  "user",
+                  JSON.stringify(refreshData.user),
+                );
+                setUser(refreshData.user);
+              } else {
+                setUser(localUser);
+              }
+            } else {
+              console.log("❌ Token refresh failed");
+              router.push("/login");
+            }
+          } else {
+            console.log("❌ No refresh token available");
+            router.push("/login");
+          }
+        }
+      } catch (error) {
+        console.error("Admin check error:", error);
+        router.push("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdmin();
+  }, [router]);
 
   if (loading) {
     return (

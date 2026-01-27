@@ -4,13 +4,17 @@ import {
   Search,
   ShoppingCart,
   User,
+  Users,
   ChevronDown,
   LogOut,
   Package,
   UserCircle,
+  Shield,
+  BarChart,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   getCurrentUser,
   isAuthenticated,
@@ -21,77 +25,251 @@ export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [authenticated, setAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const initRef = useRef(false);
+
+  // useEffect(() => {
+  //   // Check authentication status on mount
+  //   setAuthenticated(isAuthenticated());
+  //   setUser(getCurrentUser());
+  // }, []);
+
+  // useEffect(() => {
+  //   fetch("http://localhost:3001/api/v1/auth/user", {
+  //     credentials: "include",
+  //   })
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       console.log(data);
+  //     });
+  // }, []);
+
+  // Get token from localStorage (where you stored it after login)
+  // or sessionStorage.getItem('token')
+
+  // useEffect(() => {
+  //   // Get the token inside the effect
+  //   const token = localStorage.getItem("accessToken");
+
+  //   if (!token) {
+  //     console.log("No token found in localStorage");
+  //     return;
+  //   }
+
+  //   const controller = new AbortController();
+  //   const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  //   fetch("http://localhost:3001/api/v1/auth/user", {
+  //     method: "GET",
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //       "Content-Type": "application/json",
+  //     },
+  //     credentials: "include",
+  //     signal: controller.signal,
+  //   })
+  //     .then((response) => {
+  //       console.log("User fetch status:", response.status);
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP ${response.status}`);
+  //       }
+  //       return response.json();
+  //     })
+  //     .then((data) => {
+  //       console.log("User data:", data);
+  //       if (data.success) {
+  //         setUser(data.user);
+  //         setAuthenticated(true);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       if (error.name === "AbortError") {
+  //         console.error("Request timed out");
+  //       } else {
+  //         console.error("Fetch error:", error);
+  //         if (error.message.includes("401")) {
+  //           localStorage.removeItem("accessToken");
+  //           setAuthenticated(false);
+  //         }
+  //       }
+  //     })
+  //     .finally(() => {
+  //       clearTimeout(timeoutId);
+  //     });
+
+  //   return () => {
+  //     clearTimeout(timeoutId);
+  //     controller.abort();
+  //   };
+  // }, [authenticated]); // Depend on authenticated state instead
+
+  // useEffect(() => {
+  //   const checkAndStoreTokens = () => {
+  //     // Check URL for GitHub tokens
+  //     const urlParams = new URLSearchParams(window.location.search);
+  //     const accessToken = urlParams.get("accessToken");
+  //     const refreshToken = urlParams.get("refreshToken");
+  //     const userStr = urlParams.get("user");
+  //     const source = urlParams.get("source");
+
+  //     if (accessToken && refreshToken && userStr && source === "github") {
+  //       try {
+  //         const userData = JSON.parse(decodeURIComponent(userStr));
+
+  //         // Save to storage
+  //         localStorage.setItem("accessToken", accessToken);
+  //         localStorage.setItem("refreshToken", refreshToken);
+  //         localStorage.setItem("user", JSON.stringify(userData));
+
+  //         sessionStorage.setItem("accessToken", accessToken);
+  //         sessionStorage.setItem("refreshToken", refreshToken);
+  //         sessionStorage.setItem("user", JSON.stringify(userData));
+
+  //         setUser(userData);
+  //         setAuthenticated(true);
+
+  //         // Clean URL without reload
+  //         window.history.replaceState({}, "", "/");
+
+  //         console.log("GitHub login successful with tokens!");
+  //       } catch (error) {
+  //         console.error("Error processing GitHub tokens:", error);
+  //       }
+  //     } else {
+  //       // Load existing user from storage
+  //       const existingUserStr =
+  //         localStorage.getItem("user") || sessionStorage.getItem("user");
+  //       const existingAccessToken =
+  //         localStorage.getItem("accessToken") ||
+  //         sessionStorage.getItem("accessToken");
+
+  //       if (existingUserStr && existingAccessToken) {
+  //         try {
+  //           const userData = JSON.parse(existingUserStr);
+  //           setUser(userData);
+  //           setAuthenticated(true);
+  //         } catch (error) {
+  //           console.error("Error loading user:", error);
+  //         }
+  //       }
+  //     }
+  //   };
+
+  //   checkAndStoreTokens();
+  // }, []);
 
   useEffect(() => {
-    // Check authentication status on mount
-    setAuthenticated(isAuthenticated());
-    setUser(getCurrentUser());
-  }, []);
+    // Prevent double execution in React StrictMode
+    if (initRef.current) return;
+    initRef.current = true;
 
-  useEffect(() => {
-    fetch("http://localhost:3001/api/v1/auth/user", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-      });
-  }, []);
+    const initializeAuth = async () => {
+      try {
+        console.log("=== AUTH INITIALIZATION START ===");
 
-  useEffect(() => {
-    const checkAndStoreTokens = () => {
-      // Check URL for GitHub tokens
-      const urlParams = new URLSearchParams(window.location.search);
-      const accessToken = urlParams.get("accessToken");
-      const refreshToken = urlParams.get("refreshToken");
-      const userStr = urlParams.get("user");
-      const source = urlParams.get("source");
+        // 1. Check for GitHub OAuth callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get("accessToken");
+        const refreshToken = urlParams.get("refreshToken");
+        const userStr = urlParams.get("user");
+        const source = urlParams.get("source");
 
-      if (accessToken && refreshToken && userStr && source === "github") {
-        try {
-          const userData = JSON.parse(decodeURIComponent(userStr));
-
-          // Save to storage
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
-          localStorage.setItem("user", JSON.stringify(userData));
-
-          sessionStorage.setItem("accessToken", accessToken);
-          sessionStorage.setItem("refreshToken", refreshToken);
-          sessionStorage.setItem("user", JSON.stringify(userData));
-
-          setUser(userData);
-          setAuthenticated(true);
-
-          // Clean URL without reload
-          window.history.replaceState({}, "", "/");
-
-          console.log("GitHub login successful with tokens!");
-        } catch (error) {
-          console.error("Error processing GitHub tokens:", error);
-        }
-      } else {
-        // Load existing user from storage
-        const existingUserStr =
-          localStorage.getItem("user") || sessionStorage.getItem("user");
-        const existingAccessToken =
-          localStorage.getItem("accessToken") ||
-          sessionStorage.getItem("accessToken");
-
-        if (existingUserStr && existingAccessToken) {
+        if (accessToken && refreshToken && userStr && source === "github") {
+          console.log("✅ GitHub OAuth tokens detected");
           try {
-            const userData = JSON.parse(existingUserStr);
+            const userData = JSON.parse(decodeURIComponent(userStr));
+
+            // Save tokens
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", refreshToken);
+            localStorage.setItem("user", JSON.stringify(userData));
+
             setUser(userData);
             setAuthenticated(true);
+            setIsLoading(false);
+
+            // Clean URL
+            window.history.replaceState({}, "", "/");
+            console.log("✅ GitHub login successful");
+            return;
           } catch (error) {
-            console.error("Error loading user:", error);
+            console.error("❌ Error processing GitHub tokens:", error);
           }
         }
+
+        // 2. Get token from localStorage
+        const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+          console.log("ℹ️ No token found - user not logged in");
+          setAuthenticated(false);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("🔑 Token found, fetching user data...");
+        console.log("Token preview:", token.substring(0, 30) + "...");
+
+        // 3. Fetch user data from API
+        const response = await fetch("http://localhost:3001/api/v1/auth/user", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        console.log("📡 Response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ Response error:", errorText);
+
+          // Clear invalid token
+          if (response.status === 401) {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("user");
+            setAuthenticated(false);
+            setUser(null);
+          }
+
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ User data received:", data);
+
+        if (data.success && data.user) {
+          setUser(data.user);
+          setAuthenticated(true);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          console.log("✅ User authenticated:", data.user.email);
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error: any) {
+        console.error("❌ Auth initialization error:", error);
+
+        // Don't clear tokens on network errors
+        if (!error.message?.includes("Failed to fetch")) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("user");
+          setAuthenticated(false);
+          setUser(null);
+        }
+      } finally {
+        setIsLoading(false);
+        console.log("=== AUTH INITIALIZATION COMPLETE ===");
       }
     };
 
-    checkAndStoreTokens();
+    initializeAuth();
   }, []);
 
   useEffect(() => {
@@ -112,6 +290,11 @@ export default function Navbar() {
     setUser(null);
     setIsUserMenuOpen(false);
     window.location.href = "/";
+  };
+
+  const goToAdmin = () => {
+    router.push("/admin");
+    setIsUserMenuOpen(false);
   };
 
   return (
@@ -241,6 +424,52 @@ export default function Navbar() {
                         <UserCircle className="h-4 w-4" />
                         My Profile
                       </Link>
+
+                      {user.role === "admin" && (
+                        <button
+                          onClick={goToAdmin}
+                          className="w-full px-4 py-3 text-left hover:bg-emerald-50 flex items-center gap-3 text-emerald-700"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Admin Panel</span>
+                        </button>
+                      )}
+
+                      {/* Admin Quick Links */}
+                      {user.role === "admin" && (
+                        <>
+                          <div className="px-4 pt-2 pb-1">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Quick Access
+                            </p>
+                          </div>
+                          <Link
+                            href="/admin/products"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
+                          >
+                            <Package className="w-4 h-4" />
+                            <span>Products</span>
+                          </Link>
+                          <Link
+                            href="/admin/users"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
+                          >
+                            <Users className="w-4 h-4" />
+                            <span>Users</span>
+                          </Link>
+                          <Link
+                            href="/admin/analytics"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
+                          >
+                            <BarChart className="w-4 h-4" />
+                            <span>Analytics</span>
+                          </Link>
+                          <div className="border-t border-emerald-50 my-1"></div>
+                        </>
+                      )}
 
                       <Link
                         href="/orders"
