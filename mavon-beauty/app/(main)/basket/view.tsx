@@ -142,63 +142,48 @@ export default function BasketPage() {
     }
   };
 
-  const handleIncrementQuantity = (
-    id: string,
-    color?: any,
-    weight?: string,
-  ): void => {
-    const item = localCartItems.find((item) => item.id === id);
+  const handleIncrementQuantity = (id: string): void => {
+    const item = contextCartItems.find((item) => item.id === id);
     if (item) {
       const newQuantity = item.quantity + 1;
       console.log(`➕ Incrementing item ${id} to ${newQuantity}`);
-      updateQuantity(
-        id,
-        color || item.color,
-        weight || item.deliveryMethod,
-        newQuantity,
-      );
-      // Force refresh
+
+      // Get the correct identifiers with proper fallbacks
+      const color = item.selectedColor || item.color || "Clear";
+      const weight = item.selectedWeight || item.deliveryMethod || "Standard";
+
+      updateQuantity(id, color, weight, newQuantity);
+      // Force refresh - ADD THIS LINE
       setRefreshTrigger((prev) => prev + 1);
     }
   };
 
-  const handleDecrementQuantity = (
-    id: string,
-    color?: any,
-    weight?: string,
-  ): void => {
-    const item = localCartItems.find((item) => item.id === id);
+  const handleDecrementQuantity = (id: string): void => {
+    const item = contextCartItems.find((item) => item.id === id);
     if (item && item.quantity > 1) {
       const newQuantity = item.quantity - 1;
       console.log(`➖ Decrementing item ${id} to ${newQuantity}`);
-      updateQuantity(
-        id,
-        color || item.color,
-        weight || item.deliveryMethod,
-        newQuantity,
-      );
-      // Force refresh
+
+      const color = item.selectedColor || item.color || "Clear";
+      const weight = item.selectedWeight || item.deliveryMethod || "Standard";
+
+      updateQuantity(id, color, weight, newQuantity);
+      // Force refresh - ADD THIS LINE
       setRefreshTrigger((prev) => prev + 1);
     }
   };
 
-  const handleUpdateQuantity = (
-    id: string,
-    value: string,
-    color?: any,
-    weight?: string,
-  ): void => {
+  const handleUpdateQuantity = (id: string, value: string): void => {
     const quantity = Math.max(1, parseInt(value) || 1);
-    const item = localCartItems.find((item) => item.id === id);
+    const item = contextCartItems.find((item) => item.id === id);
     if (item) {
       console.log(`✏️ Updating item ${id} quantity to ${quantity}`);
-      updateQuantity(
-        id,
-        color || item.color,
-        weight || item.deliveryMethod,
-        quantity,
-      );
-      // Force refresh
+
+      const color = item.selectedColor || item.color || "Clear";
+      const weight = item.selectedWeight || item.deliveryMethod || "Standard";
+
+      updateQuantity(id, color, weight, quantity);
+      // Force refresh - ADD THIS LINE
       setRefreshTrigger((prev) => prev + 1);
     }
   };
@@ -433,13 +418,7 @@ export default function BasketPage() {
                       <span className="text-gray-600">Quantity:</span>
                       <div className="flex items-center gap-2 border border-emerald-200 rounded-full overflow-hidden">
                         <button
-                          onClick={() =>
-                            handleDecrementQuantity(
-                              item.id,
-                              item.selectedColor,
-                              item.selectedWeight,
-                            )
-                          }
+                          onClick={() => handleDecrementQuantity(item.id)}
                           className="px-3 py-1 hover:bg-emerald-50"
                         >
                           <Minus className="w-4 h-4 text-gray-600" />
@@ -448,24 +427,13 @@ export default function BasketPage() {
                           type="number"
                           value={item.quantity}
                           onChange={(e) =>
-                            handleUpdateQuantity(
-                              item.id,
-                              e.target.value,
-                              item.selectedColor,
-                              item.selectedWeight,
-                            )
+                            handleUpdateQuantity(item.id, e.target.value)
                           }
                           className="w-12 text-center border-none focus:outline-none"
                           min="1"
                         />
                         <button
-                          onClick={() =>
-                            handleIncrementQuantity(
-                              item.id,
-                              item.selectedColor,
-                              item.selectedWeight,
-                            )
-                          }
+                          onClick={() => handleIncrementQuantity(item.id)}
                           className="px-3 py-1 hover:bg-emerald-50"
                         >
                           <Plus className="w-4 h-4 text-gray-600" />
@@ -697,25 +665,19 @@ export default function BasketPage() {
                               <div className="flex items-center justify-center gap-2 border border-emerald-200 rounded-full overflow-hidden w-fit mx-auto">
                                 <button
                                   onClick={() =>
-                                    handleDecrementQuantity(
-                                      item.id,
-                                      item.selectedColor,
-                                      item.selectedWeight,
-                                    )
+                                    handleDecrementQuantity(item.id)
                                   }
                                   className="px-3 py-2 hover:bg-emerald-50"
                                 >
                                   <Minus className="w-4 h-4 text-gray-600" />
                                 </button>
                                 <input
-                                  type="number"
+                                  type="text"
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleUpdateQuantity(
                                       item.id,
                                       e.target.value,
-                                      item.selectedColor,
-                                      item.selectedWeight,
                                     )
                                   }
                                   className="w-12 text-center border-none focus:outline-none"
@@ -723,11 +685,7 @@ export default function BasketPage() {
                                 />
                                 <button
                                   onClick={() =>
-                                    handleIncrementQuantity(
-                                      item.id,
-                                      item.selectedColor,
-                                      item.selectedWeight,
-                                    )
+                                    handleIncrementQuantity(item.id)
                                   }
                                   className="px-3 py-2 hover:bg-emerald-50"
                                 >

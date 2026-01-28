@@ -356,7 +356,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     [currentUserId],
   );
 
-  // Update item quantity
+  // Update item quantity - FIXED VERSION
   const updateQuantity = useCallback(
     (itemId: string, color: any, weight: string, newQuantity: number): void => {
       console.log(
@@ -371,17 +371,26 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         return;
       }
 
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
+      setCartItems((prevItems) => {
+        const updatedItems = prevItems.map((item) =>
           item.id === itemId &&
           JSON.stringify(item.selectedColor) === JSON.stringify(color) &&
           item.selectedWeight === weight
             ? { ...item, quantity: newQuantity }
             : item,
-        ),
-      );
+        );
+
+        // Save to localStorage immediately after state update
+        if (currentUserId) {
+          const cartKey = getCartKey(currentUserId);
+          localStorage.setItem(cartKey, JSON.stringify(updatedItems));
+          console.log(`💾 Immediate save: Updated quantity for ${itemId}`);
+        }
+
+        return updatedItems;
+      });
     },
-    [currentUserId, removeFromCart],
+    [currentUserId, removeFromCart, getCartKey],
   );
 
   // Clear entire cart (for current user)
