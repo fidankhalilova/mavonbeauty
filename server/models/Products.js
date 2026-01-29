@@ -20,16 +20,15 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Brand is required'],
         trim: true
     },
-    color: {
+    colors: [{
         type: String,
-        trim: true,
-        default: ''
-    },
-    size: {
+        trim: true
+    }],
+    // CHANGE: Array of sizes instead of single string
+    sizes: [{
         type: String,
-        trim: true,
-        default: ''
-    },
+        trim: true
+    }],
     weight: {
         type: Number,
         required: [true, 'Weight is required'],

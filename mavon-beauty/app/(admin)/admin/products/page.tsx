@@ -18,8 +18,8 @@ interface Product {
   description: string;
   images: string[];
   brand: string;
-  color: string;
-  size: string;
+  colors: string[]; // Changed from string to string[]
+  sizes: string[]; // Changed from string to string[]
   weight: number;
   price: number;
   stock: number;
@@ -60,8 +60,8 @@ export default function ProductsPage() {
     name: "",
     description: "",
     brand: "",
-    color: "",
-    size: "",
+    colors: [] as string[], // Changed from string to string[]
+    sizes: [] as string[], // Changed from string to string[]
     weight: 0,
     price: 0,
     stock: 0,
@@ -193,8 +193,8 @@ export default function ProductsPage() {
       name: "",
       description: "",
       brand: "",
-      color: "",
-      size: "",
+      colors: [],
+      sizes: [],
       weight: 0,
       price: 0,
       stock: 0,
@@ -207,12 +207,18 @@ export default function ProductsPage() {
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+
+    // Handle both old (single string) and new (array) formats
+    const productColors = Array.isArray(product.colors) ? product.colors : [];
+
+    const productSizes = Array.isArray(product.sizes) ? product.sizes : [];
+
     setFormData({
       name: product.name,
       description: product.description || "",
       brand: product.brand,
-      color: product.color,
-      size: product.size,
+      colors: productColors, // Use the parsed colors
+      sizes: productSizes, // Use the parsed sizes
       weight: product.weight,
       price: product.price,
       stock: product.stock,
@@ -223,6 +229,27 @@ export default function ProductsPage() {
     setShowModal(true);
   };
 
+  // Handle color selection
+  const handleColorToggle = (colorName: string) => {
+    setFormData((prev) => {
+      const newColors = prev.colors.includes(colorName)
+        ? prev.colors.filter((c) => c !== colorName)
+        : [...prev.colors, colorName];
+      return { ...prev, colors: newColors };
+    });
+  };
+
+  // Handle size selection
+  const handleSizeToggle = (sizeName: string) => {
+    setFormData((prev) => {
+      const newSizes = prev.sizes.includes(sizeName)
+        ? prev.sizes.filter((s) => s !== sizeName)
+        : [...prev.sizes, sizeName];
+      return { ...prev, sizes: newSizes };
+    });
+  };
+
+  // In your ProductsPage component - update the handleSubmit function:
   const handleSubmit = async () => {
     if (!formData.name || !formData.brand) {
       alert("Please fill in all required fields");
@@ -238,22 +265,40 @@ export default function ProductsPage() {
 
       // Create FormData for file upload
       const formDataToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
-        formDataToSend.append(
-          key,
-          formData[key as keyof typeof formData].toString(),
-        );
-      });
+
+      // Append basic fields
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("brand", formData.brand);
+      formDataToSend.append("weight", formData.weight.toString());
+      formDataToSend.append("price", formData.price.toString());
+      formDataToSend.append("stock", formData.stock.toString());
+      formDataToSend.append("homePage", formData.homePage.toString());
+
+      // Append colors as JSON string array
+      formDataToSend.append("colors", JSON.stringify(formData.colors));
+
+      // Append sizes as JSON string array
+      formDataToSend.append("sizes", JSON.stringify(formData.sizes));
 
       // Append images
       selectedFiles.forEach((file) => {
         formDataToSend.append("images", file);
       });
 
+      console.log("📤 Sending FormData with:", {
+        name: formData.name,
+        colors: formData.colors,
+        sizes: formData.sizes,
+        colorsJSON: JSON.stringify(formData.colors),
+        sizesJSON: JSON.stringify(formData.sizes),
+      });
+
       const response = await fetch(url, {
         method,
         body: formDataToSend,
       });
+
       const data = await response.json();
 
       if (data.success) {
@@ -374,29 +419,51 @@ export default function ProductsPage() {
               <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                 {product.description}
               </p>
-
-              <div className="flex items-center gap-2 mb-2">
+              {/* Display colors */}
+              <div className="flex flex-wrap gap-2 mb-2">
                 <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                   {product.brand}
                 </span>
-                {product.color &&
-                  colors.find((c) => c.name === product.color) && (
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="w-4 h-4 rounded-full border border-gray-300"
-                        style={{
-                          backgroundColor: colors.find(
-                            (c) => c.name === product.color,
-                          )?.hexCode,
-                        }}
-                      ></div>
-                      <span className="text-xs text-gray-600">
-                        {product.color}
-                      </span>
-                    </div>
-                  )}
+                {product.colors && product.colors.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {/* Handle array format - this is all you need now */}
+                    {product.colors.map((colorName, idx) => {
+                      const color = colors.find((c) => c.name === colorName);
+                      return color ? (
+                        <div key={idx} className="flex items-center gap-1">
+                          <div
+                            className="w-4 h-4 rounded-full border border-gray-300"
+                            style={{ backgroundColor: color.hexCode }}
+                            title={color.name}
+                          ></div>
+                        </div>
+                      ) : (
+                        // Fallback if color not found in colors list
+                        <div key={idx} className="flex items-center gap-1">
+                          <div
+                            className="w-4 h-4 rounded-full border border-gray-300 bg-gray-300"
+                            title={colorName}
+                          ></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
+              {/* Display sizes */}
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {product.sizes.map((size, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
+                    >
+                      {size}
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="flex items-center justify-between mb-3">
                 <span className="text-lg font-bold text-emerald-600">
                   ${product.price.toFixed(2)}
@@ -405,7 +472,6 @@ export default function ProductsPage() {
                   Stock: {product.stock}
                 </span>
               </div>
-
               <div className="flex gap-2">
                 <button
                   onClick={() => openEditModal(product)}
@@ -444,7 +510,7 @@ export default function ProductsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold mb-6">
               {editingProduct ? "Edit Product" : "Add New Product"}
@@ -557,6 +623,7 @@ export default function ProductsPage() {
                 />
               </div>
 
+              {/* Brand selection (single select) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Brand *
@@ -577,44 +644,137 @@ export default function ProductsPage() {
                 </select>
               </div>
 
+              {/* Colors selection (multi-select) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Color
+                  Colors (Select multiple)
                 </label>
-                <select
-                  value={formData.color}
-                  onChange={(e) =>
-                    setFormData({ ...formData, color: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="">Select color</option>
-                  {colors.map((color) => (
-                    <option key={color._id} value={color.name}>
-                      {color.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="border border-gray-300 rounded-lg p-2 max-h-40 overflow-y-auto">
+                  {colors.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-2">
+                      No colors available
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {colors.map((color) => (
+                        <div
+                          key={color._id}
+                          className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                          onClick={() => handleColorToggle(color.name)}
+                        >
+                          <div
+                            className={`w-6 h-6 rounded-full border border-gray-300 ${
+                              formData.colors.includes(color.name)
+                                ? "ring-2 ring-emerald-500 ring-offset-1"
+                                : ""
+                            }`}
+                            style={{ backgroundColor: color.hexCode }}
+                          />
+                          <span className="text-sm text-gray-700">
+                            {color.name}
+                          </span>
+                          <div className="ml-auto">
+                            {formData.colors.includes(color.name) ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {formData.colors.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-500 mb-1">
+                      Selected colors:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {formData.colors.map((colorName) => {
+                        const color = colors.find((c) => c.name === colorName);
+                        return color ? (
+                          <div
+                            key={colorName}
+                            className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs"
+                          >
+                            <div
+                              className="w-3 h-3 rounded-full border border-emerald-300"
+                              style={{ backgroundColor: color.hexCode }}
+                            />
+                            {color.name}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleColorToggle(color.name);
+                              }}
+                              className="ml-1 text-emerald-500 hover:text-emerald-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
+              {/* Sizes selection (multi-select) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Size
+                  Sizes (Select multiple)
                 </label>
-                <select
-                  value={formData.size}
-                  onChange={(e) =>
-                    setFormData({ ...formData, size: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="">Select size</option>
-                  {sizes.map((size) => (
-                    <option key={size._id} value={size.name}>
-                      {size.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="border border-gray-300 rounded-lg p-2 max-h-40 overflow-y-auto">
+                  {sizes.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-2">
+                      No sizes available
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {sizes.map((size) => (
+                        <div
+                          key={size._id}
+                          className={`flex items-center justify-center p-2 border rounded cursor-pointer text-sm font-medium transition-colors ${
+                            formData.sizes.includes(size.name)
+                              ? "border-emerald-600 bg-emerald-50 text-emerald-700"
+                              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                          onClick={() => handleSizeToggle(size.name)}
+                        >
+                          {size.name}
+                          {formData.sizes.includes(size.name) && (
+                            <Check className="w-3 h-3 ml-1" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {formData.sizes.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-500 mb-1">
+                      Selected sizes:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {formData.sizes.map((size) => (
+                        <div
+                          key={size}
+                          className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs"
+                        >
+                          {size}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSizeToggle(size);
+                            }}
+                            className="ml-1 text-blue-500 hover:text-blue-700"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

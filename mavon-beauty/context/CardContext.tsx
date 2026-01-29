@@ -19,6 +19,7 @@ export interface CartItem {
   originalPrice?: number;
   image: string;
   selectedColor?: any;
+  selectedSize?: any;
   selectedWeight?: string;
   quantity: number;
   addedAt?: string;

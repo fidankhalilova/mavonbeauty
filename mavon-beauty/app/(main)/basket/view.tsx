@@ -244,16 +244,16 @@ export default function BasketPage() {
 
   const getColorDot = (color: string) => {
     const colorMap: Record<string, string> = {
-      Clear: "bg-blue-100 border-2 border-blue-200",
-      White: "bg-white border-2 border-gray-300",
-      Pink: "bg-pink-200",
-      Beige: "bg-amber-100",
-      Black: "bg-gray-900",
-      Red: "bg-red-500",
-      Blue: "bg-blue-500",
-      Green: "bg-green-500",
-      Yellow: "bg-yellow-500",
-      Purple: "bg-purple-500",
+      clear: "bg-blue-100 border-2 border-blue-200",
+      white: "bg-white border-2 border-gray-300",
+      pink: "bg-pink-200",
+      beige: "bg-amber-100",
+      black: "bg-gray-900",
+      red: "bg-red-500",
+      blue: "bg-blue-500",
+      green: "bg-green-500",
+      yellow: "bg-yellow-500",
+      purple: "bg-purple-500",
     };
     return colorMap[color] || "bg-gray-200";
   };
@@ -332,11 +332,6 @@ export default function BasketPage() {
             <h1 className="text-3xl md:text-4xl font-light text-gray-800 tracking-wide">
               Shopping Cart
             </h1>
-            {currentUserId && (
-              <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
-                User: {currentUserId.slice(-8)}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-4">
             <button

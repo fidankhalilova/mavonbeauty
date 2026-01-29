@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Minus,
   Plus,
@@ -9,6 +10,13 @@ import {
   Heart,
   Share2,
 } from "lucide-react";
+import { useCart } from "@/context/CardContext"; // Import the useCart hook
+
+interface Color {
+  _id: string;
+  name: string;
+  hexCode: string;
+}
 
 interface Product {
   _id: string;
@@ -16,8 +24,8 @@ interface Product {
   description: string;
   images: string[];
   brand: string;
-  color: string;
-  size: string;
+  colors: string[];
+  sizes: string[];
   weight: number;
   price: number;
   stock: number;
@@ -29,6 +37,8 @@ const API_BASE_URL = "http://localhost:3001/api/v1";
 export default function ShopDetailMain() {
   const params = useParams();
   const productId = params?.id as string;
+  const router = useRouter();
+  const { addToCart, currentUserId } = useCart(); // Get cart functions
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -36,12 +46,29 @@ export default function ShopDetailMain() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [colorsList, setColorsList] = useState<Color[]>([]);
+  const [isAddingToCart, setIsAddingToCart] = useState(false); // Loading state for cart
 
   useEffect(() => {
     if (productId) {
+      fetchColors();
       fetchProduct();
     }
   }, [productId]);
+
+  const fetchColors = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/colors`);
+      const data = await response.json();
+      if (data.success) {
+        setColorsList(data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching colors:", error);
+    }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -51,7 +78,16 @@ export default function ShopDetailMain() {
       const data = await response.json();
 
       if (data.success) {
-        setProduct(data.data);
+        const productData = data.data;
+        setProduct(productData);
+
+        // Set default selections
+        if (productData.colors && productData.colors.length > 0) {
+          setSelectedColor(productData.colors[0]);
+        }
+        if (productData.sizes && productData.sizes.length > 0) {
+          setSelectedSize(productData.sizes[0]);
+        }
       } else {
         setError("Product not found");
       }
@@ -100,6 +136,99 @@ export default function ShopDetailMain() {
     if (!product) return 0;
     const maxStock = 100;
     return Math.min((product.stock / maxStock) * 100, 100);
+  };
+
+  // Helper function to get hex code for a color name
+  const getHexCodeForColor = (colorName: string): string => {
+    const colorObj = colorsList.find((c) => c.name === colorName);
+    return colorObj ? colorObj.hexCode : "#CCCCCC";
+  };
+
+  // Function to handle Add to Cart using CartContext
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    setIsAddingToCart(true);
+
+    try {
+      console.log("🛍️ Add to Cart clicked for product:", product.name);
+      console.log("👤 Current user ID:", currentUserId);
+      console.log("🎨 Selected color:", selectedColor);
+      console.log("📦 Selected size:", selectedSize);
+      console.log("🔢 Quantity:", quantity);
+
+      // Get color hex code
+      const colorHex = getHexCodeForColor(selectedColor);
+
+      // Prepare cart item according to CartItem interface
+      const cartItem = {
+        id: product._id, // This is the product ID
+        name: product.name,
+        price: product.price,
+        originalPrice: product.price, // Same as price since no discount
+        image: product.images?.[0]
+          ? `${API_BASE_URL.replace("/api/v1", "")}${product.images[0]}`
+          : "https://via.placeholder.com/600x600?text=No+Image",
+        selectedColor: {
+          name: selectedColor,
+          hex: colorHex,
+        },
+        selectedWeight: selectedSize, // Using size as weight in cart
+        quantity: quantity,
+        description:
+          product.description || `${product.name} - ${product.brand}`,
+        // Additional fields from CartItem interface
+        color: selectedColor,
+        weight: product.weight,
+        deliveryMethod: "Standard",
+        model: product.name,
+        hsCode: "330499", // Default HS code for cosmetics
+        addedAt: new Date().toISOString(),
+      };
+
+      console.log("📦 Prepared cart item:", cartItem);
+
+      // Use the CartContext addToCart function
+      await addToCart(cartItem);
+
+      // If addToCart doesn't throw an error, it means it was successful
+      // The CartContext will handle the alert/success message
+
+      console.log("✅ Successfully added to cart via CartContext");
+    } catch (error: any) {
+      console.error("❌ Error in handleAddToCart:", error);
+
+      // Only show alert if error is not about authentication
+      if (
+        error.message !== "User not authenticated" &&
+        error.message !== "No user ID found"
+      ) {
+        alert("❌ Failed to add to cart. Please try again.");
+      }
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  // Function to handle Buy it Now
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    try {
+      // First add to cart
+      await handleAddToCart();
+
+      // Check if user is authenticated (CartContext will redirect if not)
+      const token = localStorage.getItem("accessToken");
+      const user = localStorage.getItem("user");
+
+      if (token && user) {
+        // Then redirect to basket page
+        router.push("/basket");
+      }
+    } catch (error) {
+      console.error("❌ Error in Buy Now:", error);
+    }
   };
 
   if (loading) {
@@ -165,7 +294,7 @@ export default function ShopDetailMain() {
                       selectedImageIndex === index + 1
                         ? "ring-4 ring-gray-900 ring-offset-1"
                         : "hover:ring-2 hover:ring-gray-400"
-                    } bg-gradient-to-br ${getGradientClass(index)}`}
+                    } bg-linear-to-br ${getGradientClass(index)}`}
                   >
                     <img
                       src={image}
@@ -237,12 +366,79 @@ export default function ShopDetailMain() {
               </div>
             )}
 
-            {/* Color Selection - if color exists */}
-            {product.color && (
+            {/* Color Selection - if colors array exists and has items */}
+            {product.colors && product.colors.length > 0 && (
               <div className="mb-8">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Color: <span className="text-gray-900">{product.color}</span>
+                  Color
                 </label>
+                <div className="flex flex-wrap gap-3">
+                  {product.colors.map((colorName, index) => {
+                    const hexCode = getHexCodeForColor(colorName);
+                    const isSelected = selectedColor === colorName;
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedColor(colorName)}
+                        className={`relative group px-4 py-2 rounded-full border-2 transition-all min-w-20 text-center ${
+                          isSelected
+                            ? "border-gray-900 ring-2 ring-offset-1 ring-gray-900"
+                            : "border-gray-300 hover:border-gray-400"
+                        }`}
+                        style={{
+                          backgroundColor: hexCode,
+                          color: "#FFFFFF", // Always white text for simplicity
+                        }}
+                        title={`${colorName} (${hexCode})`}
+                      >
+                        <span className="font-medium text-sm">{colorName}</span>
+
+                        {/* Color tooltip on hover */}
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                          <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                            {hexCode}
+                          </div>
+                          <div className="w-2 h-2 bg-gray-900 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Size Selection - if sizes array exists and has items */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Size
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {product.sizes.map((size, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all min-w-12 text-center ${
+                        selectedSize === size
+                          ? "border-gray-900 bg-gray-900 text-white"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Weight (if available) */}
+            {product.weight && (
+              <div className="mb-8">
+                <p className="text-sm font-medium text-gray-700">
+                  Weight:{" "}
+                  <span className="text-gray-900">{product.weight} g</span>
+                </p>
               </div>
             )}
 
@@ -278,19 +474,33 @@ export default function ShopDetailMain() {
                 </div>
 
                 <button
-                  disabled={product.stock === 0}
+                  onClick={handleBuyNow}
+                  disabled={product.stock === 0 || isAddingToCart}
                   className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-900 text-gray-900 py-4 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ShoppingBag className="w-5 h-5" />
-                  {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
+                  {isAddingToCart ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-5 h-5" />
+                      {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
+                    </>
+                  )}
                 </button>
               </div>
             </div>
 
             {/* Buy It Now */}
             {product.stock > 0 && (
-              <button className="w-full bg-[#0ba350] text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-8">
-                Buy it now
+              <button
+                onClick={handleBuyNow}
+                className="w-full bg-[#0ba350] text-white py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isAddingToCart}
+              >
+                {isAddingToCart ? "Processing..." : "Buy it now"}
               </button>
             )}
 

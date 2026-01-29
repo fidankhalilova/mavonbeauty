@@ -21,8 +21,8 @@ interface Product {
   description: string;
   images: string[];
   brand: string;
-  color: string;
-  size: string;
+  colors: string[];
+  sizes: string[];
   weight: number;
   price: number;
   stock: number;
@@ -94,7 +94,7 @@ export default function ShopMain() {
   const [layout, setLayoutState] = useState(3);
   const [pagination, setPaginationState] = useState<PaginationState>({
     page: 1,
-    itemsPerPage: 12,
+    itemsPerPage: 9, // CHANGED: 9 products per page
   });
   const [filters, setFiltersState] = useState<FilterState>({
     selectedBrands: [],
@@ -130,7 +130,7 @@ export default function ShopMain() {
     const savedLayout = loadFromLocalStorage("shop_layout", 3);
     const savedPagination = loadFromLocalStorage("shop_pagination", {
       page: 1,
-      itemsPerPage: 12,
+      itemsPerPage: 9, // CHANGED: 9 products per page
     });
     const savedFilters = loadFromLocalStorage("shop_filters", {
       selectedBrands: [],
@@ -188,24 +188,40 @@ export default function ShopMain() {
     });
   };
 
-  // Fetch initial data
+  // Fetch all data
   useEffect(() => {
     if (!isInitialized) return;
 
-    fetchProducts();
-    fetchBrands();
-    fetchColors();
-    fetchSizes();
+    fetchAllData();
   }, [isInitialized]);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchProducts(),
+        fetchBrands(),
+        fetchColors(),
+        fetchSizes(),
+      ]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/products?homePage=false`);
+      const response = await fetch(`${API_BASE_URL}/products`);
       const data = await response.json();
 
       if (data.success) {
         const products = data.data || [];
+        console.log("📦 Products fetched:", products.length);
+        console.log("🎨 Sample product colors:", products[0]?.colors);
+        console.log("📏 Sample product sizes:", products[0]?.sizes);
+
         setAllProducts(products);
 
         // Calculate max price
@@ -226,8 +242,6 @@ export default function ShopMain() {
       }
     } catch (error) {
       console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -235,7 +249,10 @@ export default function ShopMain() {
     try {
       const response = await fetch(`${API_BASE_URL}/brands`);
       const data = await response.json();
-      if (data.success) setBrands(data.data || []);
+      if (data.success) {
+        setBrands(data.data || []);
+        console.log("🏷️ Brands fetched:", data.data?.length);
+      }
     } catch (error) {
       console.error("Error fetching brands:", error);
     }
@@ -245,7 +262,10 @@ export default function ShopMain() {
     try {
       const response = await fetch(`${API_BASE_URL}/colors`);
       const data = await response.json();
-      if (data.success) setColors(data.data || []);
+      if (data.success) {
+        setColors(data.data || []);
+        console.log("🎨 Colors fetched:", data.data?.length);
+      }
     } catch (error) {
       console.error("Error fetching colors:", error);
     }
@@ -255,7 +275,10 @@ export default function ShopMain() {
     try {
       const response = await fetch(`${API_BASE_URL}/sizes`);
       const data = await response.json();
-      if (data.success) setSizes(data.data || []);
+      if (data.success) {
+        setSizes(data.data || []);
+        console.log("📏 Sizes fetched:", data.data?.length);
+      }
     } catch (error) {
       console.error("Error fetching sizes:", error);
     }
@@ -263,8 +286,12 @@ export default function ShopMain() {
 
   // Apply filters and pagination
   useEffect(() => {
-    if (!allProducts.length || !isInitialized) return;
+    if (!allProducts.length || !isInitialized) {
+      console.log("⏳ Waiting for data or initialization...");
+      return;
+    }
 
+    console.log("🔄 Applying filters...");
     let filtered = [...allProducts];
 
     // Apply filters
@@ -278,33 +305,52 @@ export default function ShopMain() {
       sortBy,
     } = filters;
 
+    console.log("📊 Current filters:", {
+      selectedBrands,
+      selectedColors,
+      selectedSizes,
+      productCount: filtered.length,
+    });
+
     // Brand filter
     if (selectedBrands.length > 0) {
       filtered = filtered.filter((p) => selectedBrands.includes(p.brand));
+      console.log(`🏷️ After brand filter: ${filtered.length} products`);
     }
 
-    // Color filter
+    // Color filter - Check if product has ANY of the selected colors
     if (selectedColors.length > 0) {
-      filtered = filtered.filter((p) => selectedColors.includes(p.color));
+      filtered = filtered.filter((p) => {
+        const productColors = p.colors || [];
+        return selectedColors.some((color) => productColors.includes(color));
+      });
+      console.log(`🎨 After color filter: ${filtered.length} products`);
     }
 
-    // Size filter
+    // Size filter - Check if product has ANY of the selected sizes
     if (selectedSizes.length > 0) {
-      filtered = filtered.filter((p) => selectedSizes.includes(p.size));
+      filtered = filtered.filter((p) => {
+        const productSizes = p.sizes || [];
+        return selectedSizes.some((size) => productSizes.includes(size));
+      });
+      console.log(`📏 After size filter: ${filtered.length} products`);
     }
 
     // Availability filter
     if (inStockOnly) {
       filtered = filtered.filter((p) => p.stock > 0);
+      console.log(`✅ After in-stock filter: ${filtered.length} products`);
     }
     if (outOfStockOnly) {
       filtered = filtered.filter((p) => p.stock === 0);
+      console.log(`❌ After out-of-stock filter: ${filtered.length} products`);
     }
 
     // Price filter
     filtered = filtered.filter(
       (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
     );
+    console.log(`💰 After price filter: ${filtered.length} products`);
 
     // Sorting
     switch (sortBy) {
@@ -332,10 +378,15 @@ export default function ShopMain() {
     const totalItems = filtered.length;
     const itemsPerPage = pagination.itemsPerPage;
     const total = Math.ceil(totalItems / itemsPerPage);
+
+    console.log(
+      `📄 Pagination: ${totalItems} items, ${itemsPerPage} per page = ${total} pages`,
+    );
     setTotalPages(total);
 
     // Adjust current page if it exceeds total pages
     if (pagination.page > total && total > 0) {
+      console.log(`🔄 Adjusting page from ${pagination.page} to 1`);
       setPagination((prev) => ({ ...prev, page: 1 }));
       return; // Return early, this will trigger another render
     }
@@ -345,6 +396,9 @@ export default function ShopMain() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedProducts = filtered.slice(startIndex, endIndex);
 
+    console.log(
+      `🎯 Displaying products ${startIndex + 1}-${Math.min(endIndex, totalItems)} of ${totalItems}`,
+    );
     setDisplayedProducts(paginatedProducts);
   }, [allProducts, filters, pagination, isInitialized]);
 
@@ -532,47 +586,100 @@ export default function ShopMain() {
     router.push(`/shop/${productId}`);
   };
 
-  // Transform products for ProductCard
-  const transformedProducts = displayedProducts.map((product) => ({
-    id: product._id,
-    name: product.name,
-    price: product.price,
-    image:
-      product.images && product.images.length > 0
+  // In ShopMain component - update the transformedProducts mapping:
+  // In ShopMain component - make sure this transformation is correct
+  const transformedProducts = displayedProducts.map((product) => {
+    // Debug the raw product data first
+    console.log("🔄 Transforming product:", {
+      name: product.name,
+      rawColors: product.colors,
+      rawSizes: product.sizes,
+      colorsFromDB: product.colors, // This is from database
+      sizesFromDB: product.sizes, // This is from database
+      colorsLength: product.colors?.length,
+      sizesLength: product.sizes?.length,
+      colorsType: typeof product.colors,
+      sizesType: typeof product.sizes,
+    });
+
+    // Get available colors and sizes from your collections
+    console.log("📊 Available data:", {
+      colorsCollection: colors.map((c) => c.name),
+      sizesCollection: sizes.map((s) => s.name),
+    });
+
+    // Get product colors and sizes
+    const productColors = product.colors || [];
+    const productSizes = product.sizes || [];
+
+    // Get color hex codes for display
+    const productColorHexes = colors
+      .filter((c) => productColors.includes(c.name))
+      .map((c) => c.hexCode);
+
+    // Get color options for modal (array of {name, hex})
+    const colorOptions = colors
+      .filter((c) => productColors.includes(c.name))
+      .map((c) => ({ name: c.name, hex: c.hexCode }));
+
+    console.log("🎨 Derived data:", {
+      colorOptions,
+      colorOptionsLength: colorOptions.length,
+      weightOptions: productSizes,
+      productColorHexes,
+    });
+
+    return {
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0]
         ? `${API_BASE_URL.replace("/api/v1", "")}${product.images[0]}`
         : "https://via.placeholder.com/600x600?text=No+Image",
-    colors: colors
-      .filter((c) => c.name === product.color)
-      .map((c) => c.hexCode)
-      .slice(0, 3),
-    moreColors: colors.length > 3 ? colors.length - 3 : 0,
-    showWishlist: true,
-    description: product.description || "",
-    colorOptions: colors.map((c) => ({ name: c.name, hex: c.hexCode })),
-    weightOptions: sizes.map((s) => s.name),
-    badge:
-      product.stock > 0
-        ? product.stock < 10
-          ? "Low Stock"
-          : ""
-        : "Out of Stock",
-  }));
+      colors: productColorHexes.slice(0, 3),
+      moreColors:
+        productColorHexes.length > 3 ? productColorHexes.length - 3 : 0,
+      showWishlist: true,
+      description: product.description || "",
+      // CRITICAL: These must be set for the modal
+      colorOptions: colorOptions,
+      weightOptions: productSizes,
+      badge:
+        product.stock > 0
+          ? product.stock < 10
+            ? "Low Stock"
+            : ""
+          : "Out of Stock",
+    };
+  });
 
   // Counts for filter badges
   const inStockCount = allProducts.filter((p) => p.stock > 0).length;
   const outOfStockCount = allProducts.filter((p) => p.stock === 0).length;
+
   const brandCounts = brands.map((brand) => ({
     name: brand.name,
     count: allProducts.filter((p) => p.brand === brand.name).length,
   }));
+
+  // Color counts - count products that have this color in their array
   const colorCounts = colors.map((color) => ({
     ...color,
-    count: allProducts.filter((p) => p.color === color.name).length,
+    count: allProducts.filter((p) => (p.colors || []).includes(color.name))
+      .length,
   }));
+
+  // Size counts - count products that have this size in their array
   const sizeCounts = sizes.map((size) => ({
     ...size,
-    count: allProducts.filter((p) => p.size === size.name).length,
+    count: allProducts.filter((p) => (p.sizes || []).includes(size.name))
+      .length,
   }));
+
+  console.log("📊 Filter counts:", {
+    colors: colorCounts.map((c) => `${c.name}: ${c.count}`),
+    sizes: sizeCounts.map((s) => `${s.name}: ${s.count}`),
+  });
 
   const hasActiveFilters =
     filters.selectedBrands.length > 0 ||
@@ -583,11 +690,6 @@ export default function ShopMain() {
     filters.priceRange[0] > 0 ||
     filters.priceRange[1] < maxPrice ||
     filters.sortBy !== "date-new";
-
-  // Debug: Add this to check if filters are loading correctly
-  console.log("Current filters state:", filters);
-  console.log("Total pages:", totalPages);
-  console.log("Current page:", pagination.page);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -858,7 +960,7 @@ export default function ShopMain() {
                   <ChevronDown className="w-4 h-4" />
                 )}
               </button>
-              {filters.openSections.color && (
+              {filters.openSections.color && colorCounts.length > 0 && (
                 <div className="space-y-3">
                   {colorCounts.map((color) => (
                     <label
@@ -902,7 +1004,7 @@ export default function ShopMain() {
                   <ChevronDown className="w-4 h-4" />
                 )}
               </button>
-              {filters.openSections.brand && (
+              {filters.openSections.brand && brandCounts.length > 0 && (
                 <div className="space-y-3">
                   {brandCounts.map((brand, index) => (
                     <label
@@ -940,7 +1042,7 @@ export default function ShopMain() {
                   <ChevronDown className="w-4 h-4" />
                 )}
               </button>
-              {filters.openSections.weight && (
+              {filters.openSections.weight && sizeCounts.length > 0 && (
                 <div className="space-y-3">
                   {sizeCounts.map((size) => (
                     <label
@@ -1003,7 +1105,7 @@ export default function ShopMain() {
       </div>
 
       {/* Pagination - ALWAYS SHOW IF PRODUCTS EXIST */}
-      {allProducts.length > 0 && (
+      {allProducts.length > 0 && totalPages > 1 && (
         <div className="mt-8">
           <Pagination
             currentPage={pagination.page}

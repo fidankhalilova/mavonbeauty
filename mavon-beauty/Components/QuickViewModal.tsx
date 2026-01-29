@@ -32,18 +32,39 @@ export default function ProductQuickViewModal({
   isOpen,
   onClose,
 }: ProductModalProps) {
-  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(
-    product.colorOptions?.[0] || null,
-  );
-  const [selectedWeight, setSelectedWeight] = useState<string>(
-    product.weightOptions?.[0] || "",
-  );
+  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
+  const [selectedWeight, setSelectedWeight] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const detailsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Get cart functions
   const { addToCart, currentUserId } = useCart();
+
+  useEffect(() => {
+    console.log("🎯 Modal received product:", {
+      name: product.name,
+      colorOptions: product.colorOptions,
+      weightOptions: product.weightOptions,
+      hasColorOptions: product.colorOptions?.length || 0,
+      hasWeightOptions: product.weightOptions?.length || 0,
+    });
+
+    // Reset selections when product changes
+    if (product.colorOptions && product.colorOptions.length > 0) {
+      setSelectedColor(product.colorOptions[0]);
+    } else {
+      setSelectedColor(null);
+    }
+
+    if (product.weightOptions && product.weightOptions.length > 0) {
+      setSelectedWeight(product.weightOptions[0]);
+    } else {
+      setSelectedWeight("");
+    }
+
+    setQuantity(1);
+  }, [product]);
 
   useEffect(() => {
     if (isOpen) {
@@ -94,6 +115,8 @@ export default function ProductQuickViewModal({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("🛍️ Add to Cart clicked for product:", product.name);
+    console.log("🎨 Selected color:", selectedColor);
+    console.log("📦 Selected weight:", selectedWeight);
     console.log("🔄 Current user ID:", currentUserId);
 
     try {
@@ -195,12 +218,16 @@ export default function ProductQuickViewModal({
                 <p>{product.description}</p>
               </div>
             )}
-            {product.colorOptions && product.colorOptions.length > 0 && (
+
+            {/* Color Selection - Updated with fallback */}
+            {product.colorOptions && product.colorOptions.length > 0 ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Color:{" "}
                   <span className="text-gray-900 font-semibold">
-                    {selectedColor?.name || "Peach orange"}
+                    {selectedColor?.name ||
+                      product.colorOptions[0]?.name ||
+                      "Select color"}
                   </span>
                 </label>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -224,13 +251,21 @@ export default function ProductQuickViewModal({
                   )}
                 </div>
               </div>
+            ) : (
+              <div className="text-gray-500 text-sm">
+                No color options available for this product
+              </div>
             )}
-            {product.weightOptions && product.weightOptions.length > 0 && (
+
+            {/* Weight/Size Selection - Updated with fallback */}
+            {product.weightOptions && product.weightOptions.length > 0 ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Weight:{" "}
+                  Size:{" "}
                   <span className="text-gray-900 font-semibold">
-                    {selectedWeight || "100gm"}
+                    {selectedWeight ||
+                      product.weightOptions[0] ||
+                      "Select size"}
                   </span>
                 </label>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -252,7 +287,12 @@ export default function ProductQuickViewModal({
                   ))}
                 </div>
               </div>
+            ) : (
+              <div className="text-gray-500 text-sm">
+                No size options available for this product
+              </div>
             )}
+
             <div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
@@ -285,21 +325,33 @@ export default function ProductQuickViewModal({
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
-                {/* UPDATED: Connect Add To Cart button to handler */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-[#0ba350] text-white py-3 lg:py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                  disabled={!selectedColor || !selectedWeight}
+                  className={`flex-1 py-3 lg:py-4 rounded-lg font-semibold transition-colors ${
+                    selectedColor && selectedWeight
+                      ? "bg-[#0ba350] text-white hover:bg-green-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Add To Cart
+                  {selectedColor && selectedWeight
+                    ? "Add To Cart"
+                    : "Select Options"}
                 </button>
               </div>
             </div>
-            {/* UPDATED: Connect Buy Now button to handler */}
             <button
               onClick={handleBuyNow}
-              className="w-full bg-[#0ba350] text-white py-3 lg:py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              disabled={!selectedColor || !selectedWeight}
+              className={`w-full py-3 lg:py-4 rounded-lg font-semibold transition-colors ${
+                selectedColor && selectedWeight
+                  ? "bg-[#0ba350] text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
-              Buy it now
+              {selectedColor && selectedWeight
+                ? "Buy it now"
+                : "Select Options First"}
             </button>
             <div className="pt-4 border-t border-gray-200">
               <a

@@ -44,21 +44,22 @@ export interface CartContextType {
   };
 }
 
+// types/cart.ts
 export interface Product {
   id: string;
   name: string;
   price: number;
   originalPrice?: number;
   image: string;
-  colorOptions?: Array<{ name: string; hex: string }>;
-  weightOptions?: string[];
   description?: string;
+  colors?: string[]; // hex colors for display
+  moreColors?: number;
+  showWishlist?: boolean;
+  colorOptions?: { name: string; hex: string }[]; // for modal
+  weightOptions?: string[]; // for modal
+  badge?: string;
   rating?: number;
   reviews?: number;
-  colors?: string[];
-  moreColors?: number;
-  badge?: string;
-  showWishlist?: boolean;
 }
 
 export interface OrderData {

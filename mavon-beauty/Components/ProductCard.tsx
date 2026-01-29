@@ -22,6 +22,13 @@ export default function ProductCard({
   const handleQuickView = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("🔍 Opening quick view for product:", {
+      name: product.name,
+      hasColorOptions: product.colorOptions?.length || 0,
+      hasWeightOptions: product.weightOptions?.length || 0,
+      colorOptions: product.colorOptions,
+      weightOptions: product.weightOptions,
+    });
     setIsModalOpen(true);
   };
 
@@ -35,6 +42,10 @@ export default function ProductCard({
       onProductClick();
     }
   };
+
+  const availableColors = product.colors || [];
+  const colorsToShow = availableColors.slice(0, 3);
+  const moreColorsCount = Math.max(0, availableColors.length - 3);
 
   return (
     <>
@@ -111,9 +122,9 @@ export default function ProductCard({
               )}
             </div>
           )}
-          {product.colors && product.colors.length > 0 && (
+          {availableColors.length > 0 && (
             <div className="flex items-center gap-2">
-              {product.colors.slice(0, 3).map((color: string, idx: number) => (
+              {colorsToShow.map((color: string, idx: number) => (
                 <div
                   key={idx}
                   className="w-6 h-6 rounded-full border-2 border-gray-200 cursor-pointer hover:border-gray-400 transition-colors"
@@ -121,9 +132,9 @@ export default function ProductCard({
                   title={`Color variant ${idx + 1}`}
                 />
               ))}
-              {product.moreColors && (
+              {moreColorsCount > 0 && (
                 <span className="text-sm text-gray-600 font-medium">
-                  +{product.moreColors}
+                  +{moreColorsCount}
                 </span>
               )}
             </div>
