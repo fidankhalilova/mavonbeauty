@@ -9,7 +9,7 @@ interface Size {
     createdAt?: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = 'http://localhost:3001/api/v1';
 
 const SIZE_CATEGORIES = [
     { value: 'clothing', label: 'Clothing' },
