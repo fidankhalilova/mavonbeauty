@@ -11,6 +11,7 @@ import {
   UserCircle,
   Shield,
   BarChart,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -35,12 +36,56 @@ interface UserData {
   profileUrl?: string;
 }
 
+interface Product {
+  _id?: string;
+  id?: string;
+  documentId?: string;
+  name: string;
+  price: number;
+  images?: string[];
+  image?: string | { url: string };
+  category?: string;
+}
+
+const getProductId = (product: Product): string => {
+  return product._id || product.id || product.documentId || '';
+};
+
+const getProductImage = (product: Product): string | null => {
+  if (product.images && product.images.length > 0) {
+    const img = product.images[0];
+    if (img.startsWith('http')) return img;
+    if (img.startsWith('/')) return `http://localhost:3001${img}`;
+    return img;
+  }
+  if (product.image) {
+    if (typeof product.image === 'string') {
+      const img = product.image;
+      if (img.startsWith('http')) return img;
+      if (img.startsWith('/')) return `http://localhost:3001${img}`;
+      return img;
+    } else if (product.image.url) {
+      const img = product.image.url;
+      if (img.startsWith('http')) return img;
+      if (img.startsWith('/')) return `http://localhost:3001${img}`;
+      return img;
+    }
+  }
+  
+  return null;
+};
+
 export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const initRef = useRef<boolean>(false);
 
@@ -54,8 +99,6 @@ export default function Navbar() {
     const initializeAuth = async (): Promise<void> => {
       try {
         console.log("=== AUTH INITIALIZATION START ===");
-
-        // 1. Check for GitHub OAuth callback
         const urlParams = new URLSearchParams(window.location.search);
         const accessToken = urlParams.get("accessToken");
         const refreshToken = urlParams.get("refreshToken");
@@ -63,11 +106,10 @@ export default function Navbar() {
         const source = urlParams.get("source");
 
         if (accessToken && refreshToken && userStr && source === "github") {
-          console.log("✅ GitHub OAuth tokens detected");
+          console.log("GitHub OAuth tokens detected");
           try {
             const userData: UserData = JSON.parse(decodeURIComponent(userStr));
 
-            // Save tokens (cookie for middleware to read on /admin)
             localStorage.setItem("accessToken", accessToken);
             localStorage.setItem("refreshToken", refreshToken);
             localStorage.setItem("user", JSON.stringify(userData));
@@ -77,34 +119,29 @@ export default function Navbar() {
             setAuthenticated(true);
             setIsLoading(false);
 
-            // Clean URL
             window.history.replaceState({}, "", "/");
-            console.log("✅ GitHub login successful");
+            console.log("GitHub login successful");
 
-            // Notify cart context
             notifyUserChanged();
 
             return;
           } catch (error) {
-            console.error("❌ Error processing GitHub tokens:", error);
+            console.error(" Error processing GitHub tokens:", error);
           }
         }
 
-        // 2. Get token from localStorage
         const token = localStorage.getItem("accessToken");
 
         if (!token) {
-          console.log("ℹ️ No token found - user not logged in");
+          console.log(" No token found - user not logged in");
           setAuthenticated(false);
           setUser(null);
           setIsLoading(false);
           return;
         }
 
-        console.log("🔑 Token found, fetching user data...");
+        console.log("Token found, fetching user data...");
         console.log("Token preview:", token.substring(0, 30) + "...");
-
-        // 3. Fetch user data from API
         const response = await fetch("http://localhost:3001/api/v1/auth/user", {
           method: "GET",
           headers: {
@@ -118,9 +155,7 @@ export default function Navbar() {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("❌ Response error:", errorText);
-
-          // Clear invalid token
+          console.error(" Response error:", errorText);
           if (response.status === 401) {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
@@ -134,23 +169,19 @@ export default function Navbar() {
         }
 
         const data = await response.json();
-        console.log("✅ User data received:", data);
+        console.log("User data received:", data);
 
         if (data.success && data.user) {
           setUser(data.user);
           setAuthenticated(true);
           localStorage.setItem("user", JSON.stringify(data.user));
-          console.log("✅ User authenticated:", data.user.email);
-
-          // Notify cart context
+          console.log("User authenticated:", data.user.email);
           notifyUserChanged();
         } else {
           throw new Error("Invalid response format");
         }
       } catch (error: any) {
-        console.error("❌ Auth initialization error:", error);
-
-        // Don't clear tokens on network errors
+        console.error("Auth initialization error:", error);
         if (!error.message?.includes("Failed to fetch")) {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
@@ -179,20 +210,83 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+  useEffect(() => {
+    const searchProducts = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      console.log("Searching for:", searchQuery);
+      setIsSearching(true);
+      try {
+        let response;
+        let data;
+        console.log("Trying search endpoint...");
+        response = await fetch(
+          `http://localhost:3001/api/v1/products/search?q=${encodeURIComponent(searchQuery)}`
+        );
+        
+        if (!response.ok) {
+          console.log("Trying products endpoint with search param...");
+          response = await fetch(
+            `http://localhost:3001/api/v1/products?search=${encodeURIComponent(searchQuery)}`
+          );
+        }
+        
+        if (!response.ok) {
+          console.log("Getting all products and filtering client-side...");
+          response = await fetch('http://localhost:3001/api/v1/products');
+        }
+        
+        if (response.ok) {
+          data = await response.json();
+          console.log("Response data:", data);
+          let products = data.products || data.data || [];
+          console.log("First product (if exists):", products[0]);
+          if (Array.isArray(products) && !response.url.includes('search') && !response.url.includes('?search=')) {
+            console.log("Filtering products client-side...");
+            products = products.filter((product: Product) =>
+              product.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            console.log("Filtered products:", products.length);
+          }
+          
+          setSearchResults(products.slice(0, 10)); 
+          console.log("Found", products.length, "products");
+        } else {
+          console.log(" No successful response");
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error(" Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchProducts();
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
   const handleLogout = (): void => {
-    // Clear user-specific cart before logging out
-    console.log("🧹 Clearing cart for user on logout");
+    console.log("Clearing cart for user on logout");
     clearUserCart();
-
-    // Clear auth tokens and trigger events
     logoutUser();
-
-    // Clear local state
     setAuthenticated(false);
     setUser(null);
     setIsUserMenuOpen(false);
-
-    // Redirect to home
     window.location.href = "/";
   };
 
@@ -205,7 +299,30 @@ export default function Navbar() {
     redirectToCart();
   };
 
-  // Display current user info in cart badge
+  const handleSearchToggle = (): void => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  };
+
+  const handleProductClick = (productId: string): void => {
+    router.push(`/shop/${productId}`);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
   const displayCartCount = (): string => {
     const count = getCartItemCount();
     if (authenticated && currentUserId) {
@@ -214,7 +331,6 @@ export default function Navbar() {
     return count.toString();
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 h-19">
@@ -239,7 +355,6 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-19">
-          {/* Logo */}
           <div className="shrink-0">
             <Link href="/">
               <img
@@ -249,8 +364,6 @@ export default function Navbar() {
               />
             </Link>
           </div>
-
-          {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
@@ -298,13 +411,15 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
-
-          {/* Right Side Icons */}
           <div className="flex items-center">
-            {/* Search */}
-            <button className="text-black hover:text-gray-900 px-4">
-              <Search className="h-5.5 w-5.5" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={handleSearchToggle}
+                className="text-black hover:text-gray-900 px-4"
+              >
+                <Search className="h-5.5 w-5.5" />
+              </button>
+            </div>
 
             <div className="h-6 w-px bg-black"></div>
 
@@ -319,7 +434,7 @@ export default function Navbar() {
               </span>
             </button>
 
-            <div className="h-6 w-px bg-black"></div>
+            <div className="h-6 w-px "></div>
 
             {/* User Menu */}
             <div className="relative pl-4" ref={menuRef}>
@@ -468,6 +583,101 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+      {isSearchOpen && (
+        <div className="fixed inset-0 bg-black/20 bg-opacity-50 z-50 flex items-start justify-center pt-20">
+          <div className="bg-white w-full max-w-3xl mx-4 rounded-lg shadow-2xl">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Məhsul axtar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0AA360] focus:outline-none text-lg"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label="Bağla"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                {isSearching ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0AA360] mx-auto mb-3"></div>
+                    <p>Axtarılır...</p>
+                  </div>
+                ) : searchQuery.trim().length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Search className="w-16 h-16 mx-auto mb-3 opacity-30" />
+                    <p>Məhsul axtarmaq üçün yazmağa başlayın</p>
+                  </div>
+                ) : searchResults.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-16 h-16 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Məhsul tapılmadı</p>
+                    <p className="text-sm mt-1">"{searchQuery}" üçün nəticə yoxdur</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {searchResults.map((product) => {
+                      const productId = getProductId(product);
+                      const imageUrl = getProductImage(product);
+                      return (
+                        <button
+                          key={productId}
+                          onClick={() => handleProductClick(productId)}
+                          className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                        >
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded"
+                              onError={(e) => {
+                                console.error("Image load error:", imageUrl);
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-16 h-16 bg-gray-200 rounded flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
+                            <Package className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 truncate">
+                              {product.name}
+                            </h3>
+                            {product.category && (
+                              <p className="text-sm text-gray-500">
+                                {product.category}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-lg font-semibold text-[#0AA360]">
+                            ${product.price.toFixed(2)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
