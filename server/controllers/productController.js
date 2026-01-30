@@ -6,14 +6,14 @@ const path = require('path');
 const getAllProducts = async (req, res) => {
     try {
         const { homePage } = req.query;
-        
+
         let query = {};
-        
+
         // Filter by homePage if specified
         if (homePage !== undefined) {
             query.homePage = homePage === 'true';
         }
-        
+
         const products = await Product.find(query).sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
@@ -57,7 +57,7 @@ const getProduct = async (req, res) => {
 // Create product with multiple images
 const createProduct = async (req, res) => {
     try {
-        const { name, brand, color, size, weight, price, stock, description, homePage } = req.body;
+        const { name, brand, colors, sizes, weight, price, stock, description, homePage } = req.body;
 
         // Validation
         if (!name || !brand || weight === undefined || price === undefined) {
@@ -70,19 +70,46 @@ const createProduct = async (req, res) => {
                     }
                 });
             }
-            
+
             return res.status(400).json({
                 success: false,
                 message: 'Please provide name, brand, weight and price'
             });
         }
 
+        // Parse colors and sizes - handle both JSON strings and arrays
+        let parsedColors = [];
+        let parsedSizes = [];
+
+        try {
+            // Try to parse as JSON if it's a string
+            if (colors) {
+                parsedColors = typeof colors === 'string' ? JSON.parse(colors) : colors;
+                // Ensure it's an array
+                if (!Array.isArray(parsedColors)) {
+                    parsedColors = [parsedColors];
+                }
+            }
+
+            if (sizes) {
+                parsedSizes = typeof sizes === 'string' ? JSON.parse(sizes) : sizes;
+                // Ensure it's an array
+                if (!Array.isArray(parsedSizes)) {
+                    parsedSizes = [parsedSizes];
+                }
+            }
+        } catch (parseError) {
+            // If JSON parsing fails, treat as single values
+            if (colors) parsedColors = [colors];
+            if (sizes) parsedSizes = [sizes];
+        }
+
         // Prepare product data
         const productData = {
             name,
             brand,
-            color: color || '',
-            size: size || '',
+            colors: parsedColors,
+            sizes: parsedSizes,
             weight,
             price,
             stock: stock || 0,
@@ -95,6 +122,8 @@ const createProduct = async (req, res) => {
             productData.images = req.files.map(file => `/uploads/products/${file.filename}`);
         }
 
+        console.log('📦 Creating product with data:', productData);
+
         const product = await Product.create(productData);
 
         res.status(201).json({
@@ -103,6 +132,7 @@ const createProduct = async (req, res) => {
             data: product
         });
     } catch (error) {
+        console.error('❌ Error creating product:', error);
         // Delete uploaded files if product creation fails
         if (req.files && req.files.length > 0) {
             req.files.forEach(file => {
@@ -112,7 +142,7 @@ const createProduct = async (req, res) => {
                 }
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: 'Failed to create product',
@@ -124,7 +154,7 @@ const createProduct = async (req, res) => {
 // Update product with optional new images
 const updateProduct = async (req, res) => {
     try {
-        const { name, brand, color, size, weight, price, stock, description, homePage } = req.body;
+        const { name, brand, colors, sizes, weight, price, stock, description, homePage } = req.body;
 
         let product = await Product.findById(req.params.id);
 
@@ -138,18 +168,49 @@ const updateProduct = async (req, res) => {
                     }
                 });
             }
-            
+
             return res.status(404).json({
                 success: false,
                 message: 'Product not found'
             });
         }
 
+        // Parse colors and sizes - handle both JSON strings and arrays
+        let parsedColors = [];
+        let parsedSizes = [];
+
+        try {
+            // Try to parse as JSON if it's a string
+            if (colors !== undefined) {
+                parsedColors = typeof colors === 'string' ? JSON.parse(colors) : colors;
+                // Ensure it's an array
+                if (!Array.isArray(parsedColors)) {
+                    parsedColors = [parsedColors];
+                }
+            }
+
+            if (sizes !== undefined) {
+                parsedSizes = typeof sizes === 'string' ? JSON.parse(sizes) : sizes;
+                // Ensure it's an array
+                if (!Array.isArray(parsedSizes)) {
+                    parsedSizes = [parsedSizes];
+                }
+            }
+        } catch (parseError) {
+            // If JSON parsing fails, treat as single values
+            if (colors !== undefined) parsedColors = [colors];
+            if (sizes !== undefined) parsedSizes = [sizes];
+        }
+
         // Update fields
         if (name) product.name = name;
         if (brand) product.brand = brand;
-        if (color !== undefined) product.color = color;
-        if (size !== undefined) product.size = size;
+        if (colors !== undefined) {
+            product.colors = parsedColors;
+        }
+        if (sizes !== undefined) {
+            product.sizes = parsedSizes;
+        }
         if (weight !== undefined) product.weight = weight;
         if (price !== undefined) product.price = price;
         if (stock !== undefined) product.stock = stock;
@@ -160,7 +221,7 @@ const updateProduct = async (req, res) => {
         if (req.files && req.files.length > 0) {
             const newImages = req.files.map(file => `/uploads/products/${file.filename}`);
             product.images = [...(product.images || []), ...newImages];
-            
+
             // Limit to 5 images max
             if (product.images.length > 5) {
                 // Delete excess old images from filesystem
@@ -175,6 +236,12 @@ const updateProduct = async (req, res) => {
             }
         }
 
+        console.log('📦 Updating product with data:', {
+            name: product.name,
+            colors: product.colors,
+            sizes: product.sizes
+        });
+
         await product.save();
 
         res.status(200).json({
@@ -183,6 +250,7 @@ const updateProduct = async (req, res) => {
             data: product
         });
     } catch (error) {
+        console.error('❌ Error updating product:', error);
         // Delete uploaded files if update fails
         if (req.files && req.files.length > 0) {
             req.files.forEach(file => {
@@ -192,7 +260,7 @@ const updateProduct = async (req, res) => {
                 }
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: 'Failed to update product',

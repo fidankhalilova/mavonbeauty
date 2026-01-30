@@ -1,8 +1,28 @@
+"use client";
+
 import { X, Minus, Plus, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useCart } from "@/context/CardContext";
+import { useRouter } from "next/navigation";
+
+interface ColorOption {
+  name: string;
+  hex: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  description?: string;
+  colorOptions?: ColorOption[];
+  weightOptions?: string[];
+}
 
 interface ProductModalProps {
-  product: any;
+  product: Product;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -12,14 +32,40 @@ export default function ProductQuickViewModal({
   isOpen,
   onClose,
 }: ProductModalProps) {
-  const [selectedColor, setSelectedColor] = useState(
-    product.colorOptions?.[0] || null,
-  );
-  const [selectedWeight, setSelectedWeight] = useState(
-    product.weightOptions?.[0] || null,
-  );
-  const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
+  const [selectedWeight, setSelectedWeight] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
   const detailsRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Get cart functions
+  const { addToCart, currentUserId } = useCart();
+
+  useEffect(() => {
+    console.log("🎯 Modal received product:", {
+      name: product.name,
+      colorOptions: product.colorOptions,
+      weightOptions: product.weightOptions,
+      hasColorOptions: product.colorOptions?.length || 0,
+      hasWeightOptions: product.weightOptions?.length || 0,
+    });
+
+    // Reset selections when product changes
+    if (product.colorOptions && product.colorOptions.length > 0) {
+      setSelectedColor(product.colorOptions[0]);
+    } else {
+      setSelectedColor(null);
+    }
+
+    if (product.weightOptions && product.weightOptions.length > 0) {
+      setSelectedWeight(product.weightOptions[0]);
+    } else {
+      setSelectedWeight("");
+    }
+
+    setQuantity(1);
+  }, [product]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -35,8 +81,6 @@ export default function ProductQuickViewModal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const handleQuantityDecrease = () => {
     if (quantity > 1) setQuantity(quantity - 1);
   };
@@ -44,28 +88,89 @@ export default function ProductQuickViewModal({
   const handleQuantityIncrease = () => {
     setQuantity(quantity + 1);
   };
+
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value >= 1) {
       setQuantity(value);
     }
   };
+
   const handleClose = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onClose();
   };
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onClose();
   };
+
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log("🛍️ Add to Cart clicked for product:", product.name);
+    console.log("🎨 Selected color:", selectedColor);
+    console.log("📦 Selected weight:", selectedWeight);
+    console.log("🔄 Current user ID:", currentUserId);
+
+    try {
+      // Prepare product data for cart
+      const cartItem = {
+        id: product.id || `product-${Date.now()}`,
+        name: product.name,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        image: product.image,
+        selectedColor: selectedColor,
+        selectedWeight: selectedWeight,
+        quantity: quantity,
+        description:
+          product.description || `${product.name} - Premium beauty product`,
+      };
+
+      console.log("📦 Adding to cart:", cartItem);
+
+      // Add to cart (this will check authentication)
+      await addToCart(cartItem);
+
+      // Show success message only if authenticated
+      alert(`✅ ${quantity} ${product.name} added to cart!`);
+
+      console.log(`🛒 Cart updated for user ${currentUserId}`);
+
+      // Close modal after adding
+      onClose();
+    } catch (error) {
+      console.error("❌ Error adding to cart:", error);
+      // Don't show alert if redirected to login
+    }
+  };
+
+  const handleBuyNow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      // First add to cart
+      await handleAddToCart(e);
+
+      // If we get here, user is authenticated and item was added
+      // Redirect to basket page
+      router.push("/basket");
+    } catch (error) {
+      console.error("❌ Error in Buy Now:", error);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div 
+    <div
       className="fixed inset-0 z-9999 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
@@ -73,7 +178,7 @@ export default function ProductQuickViewModal({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleBackdropClick}
       />
-      <div 
+      <div
         className="relative bg-white w-full max-w-6xl h-[90vh] flex flex-col lg:flex-row overflow-hidden rounded-xl shadow-2xl"
         onClick={handleModalClick}
       >
@@ -101,7 +206,6 @@ export default function ProductQuickViewModal({
         >
           <div className="flex flex-col space-y-6">
             <div className="pr-10">
-              {" "}
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
                 {product.name}
               </h2>
@@ -114,40 +218,54 @@ export default function ProductQuickViewModal({
                 <p>{product.description}</p>
               </div>
             )}
-            {product.colorOptions && product.colorOptions.length > 0 && (
+
+            {/* Color Selection - Updated with fallback */}
+            {product.colorOptions && product.colorOptions.length > 0 ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Color:{" "}
                   <span className="text-gray-900 font-semibold">
-                    {selectedColor?.name || "Peach orange"}
+                    {selectedColor?.name ||
+                      product.colorOptions[0]?.name ||
+                      "Select color"}
                   </span>
                 </label>
                 <div className="flex items-center gap-3 flex-wrap">
-                  {product.colorOptions.map((color: any, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedColor(color);
-                      }}
-                      className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full border-2 transition-all shrink-0 ${
-                        selectedColor?.hex === color.hex
-                          ? "border-gray-900 ring-2 ring-offset-2 ring-gray-900"
-                          : "border-gray-300 hover:border-gray-400"
-                      }`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                    />
-                  ))}
+                  {product.colorOptions.map(
+                    (color: ColorOption, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedColor(color);
+                        }}
+                        className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full border-2 transition-all shrink-0 ${
+                          selectedColor?.hex === color.hex
+                            ? "border-gray-900 ring-2 ring-offset-2 ring-gray-900"
+                            : "border-gray-300 hover:border-gray-400"
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                        title={color.name}
+                      />
+                    ),
+                  )}
                 </div>
               </div>
+            ) : (
+              <div className="text-gray-500 text-sm">
+                No color options available for this product
+              </div>
             )}
-            {product.weightOptions && product.weightOptions.length > 0 && (
+
+            {/* Weight/Size Selection - Updated with fallback */}
+            {product.weightOptions && product.weightOptions.length > 0 ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Weight:{" "}
+                  Size:{" "}
                   <span className="text-gray-900 font-semibold">
-                    {selectedWeight || "100gm"}
+                    {selectedWeight ||
+                      product.weightOptions[0] ||
+                      "Select size"}
                   </span>
                 </label>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -169,7 +287,12 @@ export default function ProductQuickViewModal({
                   ))}
                 </div>
               </div>
+            ) : (
+              <div className="text-gray-500 text-sm">
+                No size options available for this product
+              </div>
             )}
+
             <div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
@@ -202,19 +325,33 @@ export default function ProductQuickViewModal({
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
-                <button 
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex-1 bg-[#0ba350] text-white py-3 lg:py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!selectedColor || !selectedWeight}
+                  className={`flex-1 py-3 lg:py-4 rounded-lg font-semibold transition-colors ${
+                    selectedColor && selectedWeight
+                      ? "bg-[#0ba350] text-white hover:bg-green-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Add To Cart
+                  {selectedColor && selectedWeight
+                    ? "Add To Cart"
+                    : "Select Options"}
                 </button>
               </div>
             </div>
-            <button 
-              onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#0ba350] text-white py-3 lg:py-4 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            <button
+              onClick={handleBuyNow}
+              disabled={!selectedColor || !selectedWeight}
+              className={`w-full py-3 lg:py-4 rounded-lg font-semibold transition-colors ${
+                selectedColor && selectedWeight
+                  ? "bg-[#0ba350] text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
-              Buy it now
+              {selectedColor && selectedWeight
+                ? "Buy it now"
+                : "Select Options First"}
             </button>
             <div className="pt-4 border-t border-gray-200">
               <a

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Lock, Mail, Eye, EyeOff, Shield, Sparkles } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Sparkles } from "lucide-react";
 import { loginUser } from "@/service/authService";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -37,8 +37,14 @@ export default function BeautyLogin() {
           localStorage.removeItem("rememberMe");
         }
 
-        // Redirect to dashboard or home page
-        router.push("/");
+        // Check user role and redirect
+        if (result.user?.role === "admin") {
+          // Admin goes to admin panel
+          router.push("/");
+        } else {
+          // Regular user goes to home
+          router.push("/");
+        }
       } else {
         setError(result.message || "Login failed. Please try again.");
       }
@@ -174,7 +180,7 @@ export default function BeautyLogin() {
             </div>
           </div>
 
-          {/* Social Login (optional - you can remove if not needed) */}
+          {/* Social Login */}
           <button
             onClick={handleGitHubLogin}
             className="flex items-center w-full justify-center gap-2 border border-emerald-100 rounded-full py-3 hover:bg-emerald-50 transition-colors"
@@ -207,21 +213,6 @@ export default function BeautyLogin() {
               Sign up
             </a>
           </p>
-
-          <div className="text-center mt-4">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-
-          {/* Security Badge */}
-          <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-500">
-            <Shield className="w-4 h-4" />
-            <span>Secure & encrypted</span>
-          </div>
         </div>
       </div>
     </div>

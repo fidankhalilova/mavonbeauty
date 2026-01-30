@@ -31,6 +31,42 @@ const GetAllUsersController = async (req, res) => {
     }
 }
 
+// In your AuthController.js
+// In AuthController.js - GetCurrentUser function
+const GetCurrentUser = async (req, res) => {
+    try {
+        // User is already attached by verifyToken middleware
+        const user = req.user;
+
+        const responseData = {
+            success: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role || 'user',
+                avatar: user.avatar,
+                createdAt: user.createdAt
+            }
+        };
+
+        // If a new access token was generated, include it
+        if (req.newAccessToken) {
+            responseData.accessToken = req.newAccessToken;
+            responseData.message = 'Access token refreshed';
+        }
+
+        res.status(200).json(responseData);
+
+    } catch (error) {
+        console.error('Get current user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
 const AuthRegister = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -80,56 +116,151 @@ const AuthRegister = async (req, res) => {
     }
 };
 
+// const AuthLogin = async (req, res) => {
+//     const { email, password } = req.body;
+
+//     if (!email || !password) {
+//         return res.status(400).json({
+//             success: false,  // ← Add this
+//             message: "Email and password are required"
+//         });
+//     }
+
+//     const existingUserByEmail = await UserModel.findOne({ email });
+//     if (!existingUserByEmail) {
+//         return res.status(404).json({
+//             success: false,  // ← Add this
+//             message: "User not found"
+//         });
+//     }
+
+//     const isPasswordValid = await bcrypt.compare(password, existingUserByEmail.password);
+//     if (!isPasswordValid) {
+//         return res.status(401).json({
+//             success: false,  // ← Add this
+//             message: "Invalid password"
+//         });
+//     }
+
+//     const token = jwt.sign({
+//         userId: existingUserByEmail._id,
+//         email: existingUserByEmail.email
+//     }, process.env.SECURITY_KEY, { expiresIn: '1h' });
+
+//     // Set cookie (optional)
+//     res.cookie('token', token, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === 'production',
+//         maxAge: 3600000
+//     });
+
+//     // Return response in the format frontend expects
+//     // In your AuthController.js login function
+//     res.status(200).json({
+//         success: true,
+//         message: 'Login successful',
+//         accessToken: token, // JWT token
+//         refreshToken: refreshToken, // Refresh token (if using)
+//         user: {
+//             _id: user._id,
+//             name: user.name,
+//             email: user.email,
+//             role: user.role // Make sure role is included
+//         }
+//     });
+// }
+
 const AuthLogin = async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({
-            success: false,  // ← Add this
-            message: "Email and password are required"
-        });
-    }
-
-    const existingUserByEmail = await UserModel.findOne({ email });
-    if (!existingUserByEmail) {
-        return res.status(404).json({
-            success: false,  // ← Add this
-            message: "User not found"
-        });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, existingUserByEmail.password);
-    if (!isPasswordValid) {
-        return res.status(401).json({
-            success: false,  // ← Add this
-            message: "Invalid password"
-        });
-    }
-
-    const token = jwt.sign({
-        userId: existingUserByEmail._id,
-        email: existingUserByEmail.email
-    }, process.env.SECURITY_KEY, { expiresIn: '1h' });
-
-    // Set cookie (optional)
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 3600000
-    });
-
-    // Return response in the format frontend expects
-    res.status(200).json({
-        success: true,  // ← This is crucial!
-        message: "Login successful",
-        token,
-        user: {
-            _id: existingUserByEmail._id,
-            name: existingUserByEmail.name,
-            email: existingUserByEmail.email
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
         }
-    });
-}
+
+        // Find user
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid password"
+            });
+        }
+
+        // Generate tokens
+        const tokenData = {
+            userId: user._id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+        };
+
+        // Access token (short-lived)
+        const accessToken = jwt.sign(
+            tokenData,
+            process.env.SECURITY_KEY,
+            { expiresIn: '15m' }
+        );
+
+        // Refresh token (long-lived)
+        const refreshToken = jwt.sign(
+            { userId: user._id, type: 'refresh' },
+            process.env.SECURITY_KEY,
+            { expiresIn: '7d' }
+        );
+
+        // Save refresh token to database (optional but recommended)
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        // Set cookie (optional)
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 60 * 1000 // 15 minutes
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // Return response with both tokens
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role || 'user',
+                avatar: user.avatar
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again.'
+        });
+    }
+};
 
 const DeleteUserController = async (req, res) => {
     try {
@@ -233,6 +364,54 @@ const AuthGithubCallback = async (req, res) => {
     } catch (error) {
         console.error('❌ GitHub callback error:', error);
         res.redirect(`${process.env.FRONTEND_URL}/login?error=github_error`);
+    }
+};
+
+// controllers/AuthController.js
+const UpdateUserRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        // Validate role
+        const validRoles = ['user', 'admin', 'editor'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+            });
+        }
+
+        // Find user
+        const user = await UserModel.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Update role
+        user.role = role;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `User role updated to ${role}`,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Update role error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again.'
+        });
     }
 };
 
@@ -452,7 +631,7 @@ const ResetPassword = async (req, res) => {
 // ========== VERIFY RESET TOKEN ==========
 const VerifyResetToken = async (req, res) => {
     try {
-        const { token } = req.params;
+        const { token } = req.query;
 
         if (!token) {
             return res.status(400).json({
@@ -461,13 +640,13 @@ const VerifyResetToken = async (req, res) => {
             });
         }
 
-        // Hash the token
+        // Hash the token to compare with stored hash
         const resetTokenHash = crypto
             .createHash('sha256')
             .update(token)
             .digest('hex');
 
-        // Check if token is valid and not expired
+        // Find user with valid token
         const user = await UserModel.findOne({
             resetPasswordToken: resetTokenHash,
             resetPasswordExpires: { $gt: Date.now() }
@@ -489,10 +668,11 @@ const VerifyResetToken = async (req, res) => {
         console.error('Verify token error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error"
+            message: "Server error. Please try again."
         });
     }
 };
+
 
 
 module.exports = {
@@ -501,10 +681,11 @@ module.exports = {
     DeleteUserController,
     UpdateUserController,
     GetAllUsersController,
-
+    UpdateUserRole,
     AuthGithubCallback,
     ForgotPassword,
     ResetPassword,
     VerifyResetToken,
-    RefreshToken
+    RefreshToken,
+    GetCurrentUser
 };

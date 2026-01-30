@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Montserrat } from "next/font/google";
 import RootLayoutComponent from "@/Layout/RootLayout";
+import { CartProvider } from "@/context/CardContext";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${montserrat.className} antialiased`}>
-        <RootLayoutComponent>{children}</RootLayoutComponent>
+        <CartProvider>
+          <RootLayoutComponent>{children}</RootLayoutComponent>
+        </CartProvider>
       </body>
     </html>
   );

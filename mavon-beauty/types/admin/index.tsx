@@ -7,14 +7,19 @@ export interface User {
 }
 
 export interface Product {
-  id: number;
+  _id: string; // Changed from id (number) to _id (string) for MongoDB
   name: string;
+  description?: string;
+  images: string[];
   brand: string;
-  color: string;
-  size: string;
+  colors: string[]; // Changed from string to string[]
+  sizes: string[]; // Changed from string to string[]
   weight: number;
   price: number;
   stock: number;
+  homePage?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface SidebarProps {

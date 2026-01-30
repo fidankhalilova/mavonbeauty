@@ -10,6 +10,8 @@ const menuItems = [
   { id: "color", icon: Palette, label: "Color", href: "/admin/color" },
   { id: "brand", icon: Tag, label: "Brand", href: "/admin/brand" },
   { id: "size", icon: Ruler, label: "Size", href: "/admin/size" },
+  { id: "orders", icon: Ruler, label: "Orders", href: "/admin/orders" },
+  { id: "comments", icon: Ruler, label: "Comments", href: "/admin/comments" },
 ];
 
 export default function AdminLayoutWrapper({
@@ -17,9 +19,5 @@ export default function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AdminLayout menuItems={menuItems}>
-      {children}
-    </AdminLayout>
-  );
+  return <AdminLayout menuItems={menuItems}>{children}</AdminLayout>;
 }
