@@ -34,7 +34,7 @@ const sendPasswordResetEmail = async (email, resetToken) => {
                 <p>You requested to reset your password for your Mavon Beauty account.</p>
                 <p>Click the button below to reset your password:</p>
                 <a href="${resetUrl}" 
-                   style="display: inline-block; padding: 12px 24px; background-color: #0ba350; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+                style="display: inline-block; padding: 12px 24px; background-color: #0ba350; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
                     Reset Password
                 </a>
                 <p>Or copy and paste this link in your browser:</p>
