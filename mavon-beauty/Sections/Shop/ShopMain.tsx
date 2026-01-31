@@ -14,6 +14,7 @@ import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
 import ProductCard from "@/Components/ProductCard";
 import Pagination from "@/Components/Pagination";
+import { useTranslations } from "next-intl";
 
 interface Product {
   _id: string;
@@ -89,7 +90,7 @@ const loadFromLocalStorage = (key: string, defaultValue: any) => {
 
 export default function ShopMain() {
   const router = useRouter();
-
+  const t = useTranslations("Shop.main");
   // Initialize states with localStorage
   const [layout, setLayoutState] = useState(3);
   const [pagination, setPaginationState] = useState<PaginationState>({
@@ -732,18 +733,18 @@ export default function ShopMain() {
             onChange={(e) => setSortBy(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
           >
-            <option value="name-asc">Alphabetically, A-Z</option>
-            <option value="name-desc">Alphabetically, Z-A</option>
-            <option value="price-asc">Price, low to high</option>
-            <option value="price-desc">Price, high to low</option>
-            <option value="date-old">Date, old to new</option>
-            <option value="date-new">Date, new to old</option>
+            <option value="name-asc">{t("sortOptions.nameAsc")}</option>
+            <option value="name-desc">{t("sortOptions.nameDesc")}</option>
+            <option value="price-asc">{t("sortOptions.priceAsc")}</option>
+            <option value="price-desc">{t("sortOptions.priceDesc")}</option>
+            <option value="date-old">{t("sortOptions.dateOld")}</option>
+            <option value="date-new">{t("sortOptions.dateNew")}</option>
           </select>
           <span className="text-sm font-medium whitespace-nowrap">
-            {allProducts.length} products
+            {allProducts.length} {t("products")}
             {displayedProducts.length !== allProducts.length && (
               <span className="text-gray-500 ml-1">
-                (showing {displayedProducts.length})
+                ({t("showing")} {displayedProducts.length})
               </span>
             )}
           </span>
@@ -759,7 +760,7 @@ export default function ShopMain() {
                 key={brand}
                 className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
               >
-                Brand: {brand}
+                {t("activeFilters.brand")} {brand}
                 <button
                   onClick={() => toggleBrand(brand)}
                   className="ml-1.5 hover:text-emerald-900"
@@ -846,7 +847,7 @@ export default function ShopMain() {
               onClick={clearAllFilters}
               className="text-xs text-emerald-600 hover:text-emerald-700 font-medium px-3 py-1"
             >
-              Clear all filters
+              {t("activeFilters.clearAll")}
             </button>
           </div>
         </div>
@@ -856,7 +857,7 @@ export default function ShopMain() {
         {/* Filters Sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg py-6 pr-4 sticky top-4">
-            <h3 className="text-lg font-bold mb-6">Filter:</h3>
+            <h3 className="text-lg font-bold mb-6">{t("filter")}</h3>
 
             {/* Availability Filter */}
             <div className="border-b border-gray-200 pb-6 mb-6">
@@ -864,7 +865,7 @@ export default function ShopMain() {
                 onClick={() => toggleSection("availability")}
                 className="flex justify-between items-center w-full text-left font-semibold mb-4"
               >
-                <span>Availability</span>
+                <span>{t("availability")}</span>
                 {filters.openSections.availability ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -881,7 +882,7 @@ export default function ShopMain() {
                         onChange={() => toggleAvailability("inStock")}
                         className="w-4 h-4 rounded border-gray-300"
                       />
-                      <span className="text-sm">In stock</span>
+                      <span className="text-sm">{t("inStock")}</span>
                     </div>
                     <span className="text-sm text-gray-500">
                       ({inStockCount})
@@ -898,7 +899,7 @@ export default function ShopMain() {
                       <span
                         className={`text-sm ${outOfStockCount === 0 ? "text-gray-400" : ""}`}
                       >
-                        Out of stock
+                        {t("outOfStock")}
                       </span>
                     </div>
                     <span
@@ -917,7 +918,7 @@ export default function ShopMain() {
                 onClick={() => toggleSection("price")}
                 className="flex justify-between items-center w-full text-left font-semibold mb-4"
               >
-                <span>Price</span>
+                <span>{t("price")}</span>
                 {filters.openSections.price ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -927,7 +928,8 @@ export default function ShopMain() {
               {filters.openSections.price && (
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600">
-                    The highest price is ${maxPrice.toFixed(2)}
+                    {t("highestPrice")}
+                    {maxPrice.toFixed(2)}
                   </p>
                   <div className="relative pt-2">
                     <RangeSlider
@@ -940,7 +942,8 @@ export default function ShopMain() {
                   </div>
                   <div className="pt-4">
                     <p className="text-sm font-medium">
-                      Price: ${filters.priceRange[0]} - ${filters.priceRange[1]}
+                      {t.raw("priceRange")[0]}${filters.priceRange[0]}{" "}
+                      {t.raw("priceRange")[1]} ${filters.priceRange[1]}
                     </p>
                   </div>
                 </div>
@@ -953,7 +956,7 @@ export default function ShopMain() {
                 onClick={() => toggleSection("color")}
                 className="flex justify-between items-center w-full text-left font-semibold mb-4"
               >
-                <span>Color</span>
+                <span>{t("color")}</span>
                 {filters.openSections.color ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -997,7 +1000,7 @@ export default function ShopMain() {
                 onClick={() => toggleSection("brand")}
                 className="flex justify-between items-center w-full text-left font-semibold mb-4"
               >
-                <span>Brand</span>
+                <span>{t("brand")}</span>
                 {filters.openSections.brand ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -1035,7 +1038,7 @@ export default function ShopMain() {
                 onClick={() => toggleSection("weight")}
                 className="flex justify-between items-center w-full text-left font-semibold mb-4"
               >
-                <span>Size</span>
+                <span>{t("size")}</span>
                 {filters.openSections.weight ? (
                   <ChevronUp className="w-4 h-4" />
                 ) : (
@@ -1077,14 +1080,12 @@ export default function ShopMain() {
             </div>
           ) : transformedProducts.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">
-                No products found matching your filters
-              </p>
+              <p className="text-gray-500">{t("noProducts")}</p>
               <button
                 onClick={clearAllFilters}
                 className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
-                Clear all filters
+                {t("activeFilters.clearAll")}
               </button>
             </div>
           ) : (

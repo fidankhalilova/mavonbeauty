@@ -1,19 +1,21 @@
+// app/components/AboutUs/AboutStore.tsx
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export default function AboutStore() {
+  const t = useTranslations("AboutUs");
+
   return (
     <div className="mt-20">
       <div>
         <h1 className="text-5xl text-[#333] font-bold text-center mb-8 px-50 tracking-wide leading-14">
-          About your store
+          {t("aboutStore")}
         </h1>
       </div>
       <div>
         <p className="text-[#666666] text-sm text-center mb-12 px-50 leading-7">
-          My shop is a small, independent operation that is not currently
-          featured on any big online marketplaces. This is due to the fact that
-          I am a new business and am still in the process of establishing my
-          store. However, by supplying my consumers with my contact information
-          and promoting my store on social media, I am still able to sell my
-          products and services.
+          {t("aboutStoreDescription")}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-8">

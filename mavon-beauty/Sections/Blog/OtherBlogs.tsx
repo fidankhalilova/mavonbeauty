@@ -1,6 +1,10 @@
+"use client";
 import React from "react";
+import { useTranslations } from "next-intl";
 
 export default function OtherBlogs() {
+  const t = useTranslations("Blog");
+
   return (
     <div className="w-full bg-white">
       <div className="max-w-7xl mx-auto py-12">
@@ -16,17 +20,15 @@ export default function OtherBlogs() {
               />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
-              The Secrets to Natural Beauty
+              {t("article3Title")}
             </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Natural beauty is all about appreciating your individual traits
-              and allowing your inner brilliance to shine. It's all about
-              feeling secure and at ease in your own flesh. Here are...
+              {t("article3Desc")}
             </p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
           </div>
 
@@ -40,17 +42,15 @@ export default function OtherBlogs() {
               />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
-              How to Look and Feel Your Best
+              {t("article4Title")}
             </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              It is critical for your entire well-being to look and feel your
-              best. You feel good when you look good, and you can do anything
-              when you feel good. Here...
+              {t("article4Desc")}
             </p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
           </div>
 
@@ -64,17 +64,15 @@ export default function OtherBlogs() {
               />
             </div>
             <h3 className="text-xl font-bold text-gray-900">
-              How to Get Rid of Acne
+              {t("article5Title")}
             </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
-              People of all ages are susceptible to the skin disorder known as
-              acne. It is brought on by a number of things, including bacteria,
-              excessive oil production, and dead skin...
+              {t("article5Desc")}
             </p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
           </div>
         </div>

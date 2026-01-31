@@ -6,7 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CardContext";
-import { setAccessTokenCookie, clearAccessTokenCookie } from "@/utils/cookieUtils";
+import {
+  setAccessTokenCookie,
+  clearAccessTokenCookie,
+} from "@/utils/cookieUtils";
+import { useTranslations } from "next-intl";
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -41,6 +45,7 @@ export default function CheckoutForm() {
   });
   const router = useRouter();
   const { cartItems, getSubtotal, clearCart } = useCart();
+  const t = useTranslations("Checkout");
 
   const {
     register,
@@ -73,7 +78,7 @@ export default function CheckoutForm() {
   useEffect(() => {
     const subtotal = getSubtotal();
     const shipping = 15.0;
-    const tax = subtotal * 0.075; // 7.5% tax
+    const tax = subtotal * 0.075;
     const total = subtotal + shipping + tax;
 
     setOrderSummary({
@@ -171,7 +176,6 @@ export default function CheckoutForm() {
         localStorage.setItem("accessToken", data.accessToken);
         setAccessTokenCookie(data.accessToken);
 
-        // If new refresh token is provided, store it too
         if (data.refreshToken) {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
@@ -188,14 +192,14 @@ export default function CheckoutForm() {
     }
   };
 
-  // Function to check if token is expired (simple check)
+  // Function to check if token is expired
   const isTokenExpired = (token: string): boolean => {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      const expirationTime = payload.exp * 1000; // Convert to milliseconds
+      const expirationTime = payload.exp * 1000;
       return Date.now() >= expirationTime;
     } catch {
-      return false; // If we can't parse, assume it's not expired
+      return false;
     }
   };
 
@@ -206,25 +210,22 @@ export default function CheckoutForm() {
   ) => {
     let token = localStorage.getItem("accessToken");
 
-    // Check if token is expired
     if (token && isTokenExpired(token)) {
       console.log("Token expired, attempting to refresh...");
       const newToken = await refreshAccessToken();
       if (newToken) {
         token = newToken;
       } else {
-        // If refresh fails, clear tokens and redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         clearAccessTokenCookie();
-        alert("Session expired. Please login again.");
+        alert(t("alerts.sessionExpired"));
         router.push("/login");
         throw new Error("Session expired");
       }
     }
 
-    // Add authorization header
     const headers = {
       ...options.headers,
       Authorization: `Bearer ${token}`,
@@ -232,13 +233,11 @@ export default function CheckoutForm() {
 
     const response = await fetch(url, { ...options, headers });
 
-    // If response is 401 (Unauthorized), try to refresh token and retry
     if (response.status === 401) {
       console.log("Received 401, attempting token refresh...");
       const newToken = await refreshAccessToken();
 
       if (newToken) {
-        // Update token and retry the request
         token = newToken;
         const retryHeaders = {
           ...options.headers,
@@ -251,12 +250,11 @@ export default function CheckoutForm() {
         });
         return retryResponse;
       } else {
-        // If refresh fails, clear tokens and redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         clearAccessTokenCookie();
-        alert("Session expired. Please login again.");
+        alert(t("alerts.sessionExpired"));
         router.push("/login");
         throw new Error("Session expired");
       }
@@ -267,14 +265,13 @@ export default function CheckoutForm() {
 
   const onSubmit = async (data: FormData) => {
     if (cartItems.length === 0) {
-      alert("Your cart is empty");
+      alert(t("alerts.cartEmpty"));
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Get user info from localStorage
       const userStr = localStorage.getItem("user");
       let userId = null;
       let userEmail = "";
@@ -295,20 +292,13 @@ export default function CheckoutForm() {
         throw new Error("User not found. Please login again.");
       }
 
-      // Generate order number
       const orderNumber = generateOrderNumber();
 
-      // Prepare order data - EXACTLY matching your Order model
       const orderData = {
-        // REQUIRED: Include orderNumber
         orderNumber: orderNumber,
-
-        // REQUIRED: User information
         userId: userId,
         userEmail: userEmail || data.email,
         userName: userName || `${data.firstName} ${data.lastName}`,
-
-        // REQUIRED: Order items
         items: cartItems.map((item) => ({
           productId: item.id,
           name: item.name,
@@ -319,8 +309,6 @@ export default function CheckoutForm() {
           image: item.image || "",
           description: item.description || "",
         })),
-
-        // Shipping address
         shippingAddress: {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -332,32 +320,23 @@ export default function CheckoutForm() {
           zipCode: data.zipCode,
           country: data.country,
         },
-
-        // Payment information
         paymentInfo: {
           method: "card",
           cardLast4: data.cardNumber.replace(/\s/g, "").slice(-4),
         },
-
-        // REQUIRED: Order totals
         subtotal: orderSummary.subtotal,
         shippingCost: orderSummary.shipping,
         tax: orderSummary.tax,
         discount: orderSummary.discount,
         total: orderSummary.total,
-
-        // Order details
         status: "pending",
         shippingMethod: "standard",
         notes: data.saveInfo ? "Saved info for next time" : "",
-
-        // Timestamp (will be overridden by default but include it)
         orderedAt: new Date().toISOString(),
       };
 
       console.log("Creating order with data:", orderData);
 
-      // Get token from localStorage
       const token = localStorage.getItem("accessToken");
 
       if (!token) {
@@ -366,7 +345,6 @@ export default function CheckoutForm() {
         return;
       }
 
-      // Create order using the authenticated request function
       const response = await makeAuthenticatedRequest(
         "http://localhost:3001/api/v1/orders",
         {
@@ -382,10 +360,7 @@ export default function CheckoutForm() {
       console.log("Order creation response:", result);
 
       if (result.success) {
-        // Clear cart after successful order
         clearCart();
-
-        // Redirect to orders page with success message
         const orderId = result.data?._id || result.data?.orderId || orderNumber;
         router.push(`/orders?success=true&orderId=${orderId}`);
       } else {
@@ -395,10 +370,8 @@ export default function CheckoutForm() {
       }
     } catch (error: any) {
       console.error("Order creation error:", error);
-
-      // Don't show alert if it's a session expired error (already handled)
       if (error.message !== "Session expired") {
-        alert(`Order failed: ${error.message}`);
+        alert(t("alerts.orderFailed", { error: error.message }));
       }
     } finally {
       setIsProcessing(false);
@@ -414,10 +387,10 @@ export default function CheckoutForm() {
             className="flex items-center text-emerald-600 hover:text-emerald-700 font-medium mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Cart
+            {t("backToCart")}
           </button>
           <h1 className="text-3xl md:text-4xl font-light text-gray-800 tracking-wide">
-            Checkout
+            {t("checkout")}
           </h1>
         </div>
 
@@ -430,75 +403,75 @@ export default function CheckoutForm() {
                   <User className="w-5 h-5 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-medium text-gray-800">
-                  Contact Information
+                  {t("contactInformation")}
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name *
+                    {t("firstName")}
                   </label>
                   <input
                     type="text"
                     {...register("firstName")}
                     className={`w-full border ${errors.firstName ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="John"
+                    placeholder={t("placeholders.firstName")}
                   />
                   {errors.firstName && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.firstName.message}
+                      {t("errors.firstNameRequired")}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name *
+                    {t("lastName")}
                   </label>
                   <input
                     type="text"
                     {...register("lastName")}
                     className={`w-full border ${errors.lastName ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="Doe"
+                    placeholder={t("placeholders.lastName")}
                   />
                   {errors.lastName && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.lastName.message}
+                      {t("errors.lastNameRequired")}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
+                    {t("email")}
                   </label>
                   <input
                     type="email"
                     {...register("email")}
                     className={`w-full border ${errors.email ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="john.doe@example.com"
+                    placeholder={t("placeholders.email")}
                   />
                   {errors.email && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.email.message}
+                      {t("errors.emailRequired")}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone *
+                    {t("phone")}
                   </label>
                   <input
                     type="tel"
                     {...register("phone")}
                     className={`w-full border ${errors.phone ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="+994 XX XXX XX XX"
+                    placeholder={t("placeholders.phone")}
                   />
                   {errors.phone && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.phone.message}
+                      {t("errors.phoneRequired")}
                     </p>
                   )}
                 </div>
@@ -512,24 +485,24 @@ export default function CheckoutForm() {
                   <MapPin className="w-5 h-5 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-medium text-gray-800">
-                  Shipping Address
+                  {t("shippingAddress")}
                 </h2>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Street Address *
+                    {t("streetAddress")}
                   </label>
                   <input
                     type="text"
                     {...register("address")}
                     className={`w-full border ${errors.address ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="123 Main Street, Apt 4B"
+                    placeholder={t("placeholders.address")}
                   />
                   {errors.address && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.address.message}
+                      {t("errors.addressRequired")}
                     </p>
                   )}
                 </div>
@@ -537,30 +510,30 @@ export default function CheckoutForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City *
+                      {t("city")}
                     </label>
                     <input
                       type="text"
                       {...register("city")}
                       className={`w-full border ${errors.city ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                      placeholder="Baku"
+                      placeholder={t("placeholders.city")}
                     />
                     {errors.city && (
                       <p className="text-rose-500 text-sm mt-1">
-                        {errors.city.message}
+                        {t("errors.cityRequired")}
                       </p>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State / Province
+                      {t("stateProvince")}
                     </label>
                     <input
                       type="text"
                       {...register("state")}
                       className="w-full border border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                      placeholder="Optional"
+                      placeholder={t("placeholders.state")}
                     />
                   </div>
                 </div>
@@ -568,24 +541,24 @@ export default function CheckoutForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ZIP / Postal Code *
+                      {t("zipPostalCode")}
                     </label>
                     <input
                       type="text"
                       {...register("zipCode")}
                       className={`w-full border ${errors.zipCode ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                      placeholder="AZ1000"
+                      placeholder={t("placeholders.zipCode")}
                     />
                     {errors.zipCode && (
                       <p className="text-rose-500 text-sm mt-1">
-                        {errors.zipCode.message}
+                        {t("errors.zipCodeRequired")}
                       </p>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country *
+                      {t("country")}
                     </label>
                     <select
                       {...register("country")}
@@ -610,43 +583,43 @@ export default function CheckoutForm() {
                   <Lock className="w-5 h-5 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-medium text-gray-800">
-                  Payment Information
+                  {t("paymentInformation")}
                 </h2>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Card Number *
+                    {t("cardNumber")}
                   </label>
                   <input
                     type="text"
                     value={watch("cardNumber")}
                     onChange={handleCardNumberChange}
                     className={`w-full border ${errors.cardNumber ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="1234 5678 9012 3456"
+                    placeholder={t("placeholders.cardNumber")}
                     maxLength={19}
                   />
                   {errors.cardNumber && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.cardNumber.message}
+                      {t("errors.cardNumberRequired")}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cardholder Name *
+                    {t("cardholderName")}
                   </label>
                   <input
                     type="text"
                     {...register("cardName")}
                     className={`w-full border ${errors.cardName ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                    placeholder="JOHN DOE"
+                    placeholder={t("placeholders.cardName")}
                   />
                   {errors.cardName && (
                     <p className="text-rose-500 text-sm mt-1">
-                      {errors.cardName.message}
+                      {t("errors.cardNameRequired")}
                     </p>
                   )}
                 </div>
@@ -654,37 +627,37 @@ export default function CheckoutForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expiry Date *
+                      {t("expiryDate")}
                     </label>
                     <input
                       type="text"
                       value={watch("expiryDate")}
                       onChange={handleExpiryChange}
                       className={`w-full border ${errors.expiryDate ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                      placeholder="MM/YY"
+                      placeholder={t("placeholders.expiryDate")}
                     />
                     {errors.expiryDate && (
                       <p className="text-rose-500 text-sm mt-1">
-                        {errors.expiryDate.message}
+                        {t("errors.expiryDateRequired")}
                       </p>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CVV *
+                      {t("cvv")}
                     </label>
                     <input
                       type="text"
                       value={watch("cvv")}
                       onChange={handleCvvChange}
                       className={`w-full border ${errors.cvv ? "border-rose-400" : "border-emerald-200"} rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300`}
-                      placeholder="123"
+                      placeholder={t("placeholders.cvv")}
                       maxLength={4}
                     />
                     {errors.cvv && (
                       <p className="text-rose-500 text-sm mt-1">
-                        {errors.cvv.message}
+                        {t("errors.cvvRequired")}
                       </p>
                     )}
                   </div>
@@ -724,9 +697,7 @@ export default function CheckoutForm() {
                     {...register("saveInfo")}
                     className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="ml-3 text-gray-700">
-                    Save this information for next time
-                  </span>
+                  <span className="ml-3 text-gray-700">{t("saveInfo")}</span>
                 </label>
 
                 <label className="flex items-center cursor-pointer">
@@ -736,7 +707,7 @@ export default function CheckoutForm() {
                     className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
                   />
                   <span className="ml-3 text-gray-700">
-                    Subscribe to our newsletter for exclusive offers
+                    {t("subscribeNewsletter")}
                   </span>
                 </label>
               </div>
@@ -747,32 +718,32 @@ export default function CheckoutForm() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-emerald-100 sticky top-6">
               <h2 className="text-xl font-medium text-gray-800 mb-6">
-                Order Summary
+                {t("orderSummary")}
               </h2>
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
+                  <span>{t("Basket.subtotal")}</span>
                   <span className="font-medium">
                     ${orderSummary.subtotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
+                  <span>{t("Basket.shipping")}</span>
                   <span className="font-medium">
                     ${orderSummary.shipping.toFixed(2)}
                   </span>
                 </div>
                 {orderSummary.discount > 0 && (
                   <div className="flex justify-between text-emerald-600">
-                    <span>Discount</span>
+                    <span>{t("Basket.discount")}</span>
                     <span className="font-medium">
                       -${orderSummary.discount.toFixed(2)}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between text-gray-600">
-                  <span>Tax (7.5%)</span>
+                  <span>{t("Basket.tax")}</span>
                   <span className="font-medium">
                     ${orderSummary.tax.toFixed(2)}
                   </span>
@@ -780,7 +751,7 @@ export default function CheckoutForm() {
 
                 <div className="border-t border-emerald-100 pt-4 mt-4">
                   <div className="flex justify-between font-semibold text-lg">
-                    <span className="text-gray-800">Total</span>
+                    <span className="text-gray-800">{t("Basket.total")}</span>
                     <span className="text-emerald-600">
                       ${orderSummary.total.toFixed(2)}
                     </span>
@@ -796,19 +767,19 @@ export default function CheckoutForm() {
                 {isProcessing ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    Processing...
+                    {t("processing")}
                   </>
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    Complete Order
+                    {t("completeOrder")}
                   </>
                 )}
               </button>
 
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <Lock className="w-4 h-4" />
-                <span>Secure SSL encrypted checkout</span>
+                <span>{t("secureSSL")}</span>
               </div>
             </div>
           </div>

@@ -1,15 +1,23 @@
+// app/components/Footer.tsx
+"use client";
+
 import { Twitter, Facebook, Instagram } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export default function Footer() {
+  const t = useTranslations("Footer");
+
   return (
     <footer className="border-t border-gray-200 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-6">About</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              {t("about")}
+            </h3>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Use this text area to inform your customers about your brand and
-              vision. You can modify it in the theme editor.
+              {t("aboutDescription")}
             </p>
             <div className="flex gap-4">
               <a
@@ -49,15 +57,39 @@ export default function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 mb-6">
-              Quick Links
+              {t("quickLinks")}
             </h3>
             <ul className="space-y-3">
               <li>
+                <Link
+                  href="/shop"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {t("search")}
+                </Link>
+              </li>
+              <li>
                 <a
                   href="#"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Search
+                  {t("privacyPolicy")}
+                </a>
+              </li>
+              <li>
+                <Link
+                  href="/shop"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {t("search")}
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {t("termsOfService")}
                 </a>
               </li>
               <li>
@@ -65,31 +97,7 @@ export default function Footer() {
                   href="#"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Search
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Account
+                  {t("account")}
                 </a>
               </li>
             </ul>
@@ -97,30 +105,40 @@ export default function Footer() {
 
           {/* Explore */}
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Explore</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              {t("explore")}
+            </h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/about-us"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  About Us
-                </a>
+                  {t("about")}
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/contact-us"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Contact
-                </a>
+                  {t("contact")}
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/faq"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   FAQ
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  {t("refundPolicy")}
                 </a>
               </li>
               <li>
@@ -128,15 +146,7 @@ export default function Footer() {
                   href="#"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Refund Policy
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  Shipping & Returns
+                  {t("shippingReturns")}
                 </a>
               </li>
             </ul>
@@ -145,11 +155,10 @@ export default function Footer() {
           {/* Contact Info */}
           <div>
             <h3 className="text-xl font-bold text-gray-900 mb-6">
-              Contact Info
+              {t("contactInfo")}
             </h3>
             <p className="text-gray-600 italic leading-relaxed">
-              Share information such as the store's physical address, contact
-              details, opening hours, etc.
+              {t("contactDescription")}
             </p>
           </div>
         </div>
@@ -161,16 +170,16 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             {/* Copyright */}
             <p className="text-gray-600 text-sm text-center lg:text-left">
-              © 2026, Mavon - Health & Beauty Shopify Theme Powered by Shopify
+              {t("copyright")}
             </p>
 
             {/* Language & Payment Icons */}
             <div className="flex items-center gap-6">
               {/* Language Selector */}
               <select className="text-sm text-gray-600 border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-gray-300">
-                <option>English</option>
-                <option>Spanish</option>
-                <option>French</option>
+                <option>{t("english")}</option>
+                <option>{t("spanish")}</option>
+                <option>{t("french")}</option>
               </select>
 
               {/* Payment Icons */}

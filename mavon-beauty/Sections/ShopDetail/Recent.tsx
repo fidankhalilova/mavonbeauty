@@ -2,13 +2,10 @@
 import ProductCard from "@/Components/ProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
-// Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-
-// Import Swiper styles
 import "swiper/css";
+import { useTranslations } from "next-intl";
 
 export default function Recent() {
   const prevRef = useRef<HTMLButtonElement>(null);
@@ -16,7 +13,8 @@ export default function Recent() {
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [totalSlides, setTotalSlides] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(4); // Default for SSR
+  const [itemsPerView, setItemsPerView] = useState(4);
+  const t = useTranslations("ShopDetail");
 
   const products = [
     {
@@ -86,14 +84,10 @@ export default function Recent() {
       }
 
       setItemsPerView(newItemsPerView);
-      // Calculate total slides for dots (max slide positions)
       setTotalSlides(Math.max(0, products.length - newItemsPerView + 1));
     };
 
-    // Calculate on mount
     calculateResponsiveValues();
-
-    // Recalculate on resize
     window.addEventListener("resize", calculateResponsiveValues);
 
     return () => {
@@ -101,7 +95,6 @@ export default function Recent() {
     };
   }, [products.length]);
 
-  // Function to calculate total slides (using state)
   const getTotalSlides = () => {
     return totalSlides;
   };
@@ -111,7 +104,7 @@ export default function Recent() {
       <div>
         <div>
           <h2 className="text-center font-bold text-3xl tracking-wide mb-10">
-            Recently viewed product
+            {t("recentlyViewed")}
           </h2>
         </div>
 
@@ -174,7 +167,7 @@ export default function Recent() {
           </button>
         </div>
 
-        {/* Custom Dots Indicator - Only show if there's more than 1 slide */}
+        {/* Custom Dots Indicator */}
         {totalSlides > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             {Array.from({ length: getTotalSlides() }).map((_, idx) => (

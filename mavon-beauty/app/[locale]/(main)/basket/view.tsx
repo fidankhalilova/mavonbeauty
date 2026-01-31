@@ -1,4 +1,3 @@
-// app/basket/page.tsx - COMPLETE UPDATED VERSION
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -16,10 +15,11 @@ import {
   ArrowLeft,
   RefreshCw,
 } from "lucide-react";
-import { useCart } from "@/context/CardContext"; // FIXED IMPORT PATH
+import { useCart } from "@/context/CardContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { isAuthenticated, getCurrentUserId } from "@/service/authService";
+import { useTranslations } from "next-intl";
 
 interface BasketCartItem {
   id: string;
@@ -53,6 +53,8 @@ export default function BasketPage() {
   } = useCart();
 
   const router = useRouter();
+  const t = useTranslations("Basket");
+
   const [shippingMethod, setShippingMethod] = useState<string>("standard");
   const [promoCode, setPromoCode] = useState<string>("");
   const [promoMessage, setPromoMessage] = useState<string>("");
@@ -125,19 +127,17 @@ export default function BasketPage() {
   }, [contextCartItems]);
 
   const handleRemoveItem = (id: string, color?: any, weight?: string): void => {
-    if (confirm("Remove this item from your cart?")) {
+    if (confirm(t("removeItemConfirm"))) {
       console.log(`🗑️ Removing item ${id}`, { color, weight });
       removeFromCart(id, color, weight);
-      // Force refresh
       setRefreshTrigger((prev) => prev + 1);
     }
   };
 
   const handleClearCart = (): void => {
-    if (confirm("Clear your entire cart?")) {
+    if (confirm(t("clearCartConfirm"))) {
       clearCart();
       setLocalCartItems([]);
-      // Force refresh
       setRefreshTrigger((prev) => prev + 1);
     }
   };
@@ -148,12 +148,10 @@ export default function BasketPage() {
       const newQuantity = item.quantity + 1;
       console.log(`➕ Incrementing item ${id} to ${newQuantity}`);
 
-      // Get the correct identifiers with proper fallbacks
       const color = item.selectedColor || item.color || "Clear";
       const weight = item.selectedWeight || item.deliveryMethod || "Standard";
 
       updateQuantity(id, color, weight, newQuantity);
-      // Force refresh - ADD THIS LINE
       setRefreshTrigger((prev) => prev + 1);
     }
   };
@@ -328,24 +326,26 @@ export default function BasketPage() {
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl md:text-4xl font-light text-gray-800 tracking-wide">
-              Shopping Cart
+              {t("shoppingCart")}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={handleManualRefresh}
               className="text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-2 text-sm"
-              title="Refresh cart"
+              title={t("refresh")}
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t("refresh")}
             </button>
             <div className="bg-white shadow-sm px-4 py-2 rounded-full flex items-center gap-2 border border-emerald-100">
               <ShoppingCart className="w-5 h-5 text-emerald-500" />
               <span className="font-medium text-gray-700">
                 {localCartItems.length}
               </span>
-              <span className="hidden sm:inline text-gray-600">items</span>
+              <span className="hidden sm:inline text-gray-600">
+                {t("items")}
+              </span>
             </div>
           </div>
         </div>
@@ -353,10 +353,10 @@ export default function BasketPage() {
         {localCartItems.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-emerald-100">
             <ShoppingCart className="w-16 h-16 text-emerald-200 mx-auto mb-4" />
-            <p className="text-xl text-gray-500 mb-6">Your cart is empty</p>
+            <p className="text-xl text-gray-500 mb-6">{t("cartEmpty")}</p>
             <Link href="/shop">
               <button className="bg-linear-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-full hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md">
-                Discover Products
+                {t("discoverProducts")}
               </button>
             </Link>
           </div>
@@ -398,7 +398,7 @@ export default function BasketPage() {
 
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Color:</span>
+                      <span className="text-gray-600">{t("color")}:</span>
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-4 h-4 rounded-full ${getColorDot(item.color)}`}
@@ -408,7 +408,7 @@ export default function BasketPage() {
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Quantity:</span>
+                      <span className="text-gray-600">{t("quantity")}:</span>
                       <div className="flex items-center gap-2 border border-emerald-200 rounded-full overflow-hidden">
                         <button
                           onClick={() => handleDecrementQuantity(item.id)}
@@ -439,7 +439,7 @@ export default function BasketPage() {
                         onClick={() => toggleDescription(item.id)}
                         className="flex items-center justify-between w-full text-gray-600 hover:text-gray-800"
                       >
-                        <span>Description</span>
+                        <span>{t("description")}</span>
                         {item.showDescription ? (
                           <ChevronUp className="w-4 h-4" />
                         ) : (
@@ -467,7 +467,7 @@ export default function BasketPage() {
                                   onClick={() => saveDescription(item.id)}
                                   className="px-3 py-1 bg-emerald-500 text-white rounded text-sm flex items-center gap-1"
                                 >
-                                  <Check className="w-3 h-3" /> Save
+                                  <Check className="w-3 h-3" /> {t("save")}
                                 </button>
                                 <button
                                   onClick={() =>
@@ -475,7 +475,7 @@ export default function BasketPage() {
                                   }
                                   className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm"
                                 >
-                                  Cancel
+                                  {t("cancel")}
                                 </button>
                               </div>
                             </div>
@@ -497,14 +497,14 @@ export default function BasketPage() {
                     </div>
 
                     <div className="flex justify-between pt-3 border-t border-emerald-100">
-                      <span className="text-gray-600">Price:</span>
+                      <span className="text-gray-600">{t("price")}:</span>
                       <span className="font-medium text-gray-800">
                         ${item.perPieceRate.toFixed(2)}
                       </span>
                     </div>
 
                     <div className="flex justify-between font-semibold">
-                      <span>Total:</span>
+                      <span>{t("total")}:</span>
                       <span className="text-emerald-600">
                         ${item.totalPrice.toFixed(2)}
                       </span>
@@ -528,13 +528,13 @@ export default function BasketPage() {
                           Details
                         </th>
                         <th className="py-4 px-6 text-center text-sm font-medium text-gray-700">
-                          Quantity
+                          {t("quantity")}
                         </th>
                         <th className="py-4 px-6 text-right text-sm font-medium text-gray-700">
-                          Price
+                          {t("price")}
                         </th>
                         <th className="py-4 px-6 text-right text-sm font-medium text-gray-700">
-                          Total
+                          {t("total")}
                         </th>
                         <th className="py-4 px-6 text-center text-sm font-medium text-gray-700"></th>
                       </tr>
@@ -590,7 +590,7 @@ export default function BasketPage() {
                                     onClick={() => toggleDescription(item.id)}
                                     className="flex items-center gap-1 text-gray-600 hover:text-gray-800 text-sm"
                                   >
-                                    Description
+                                    {t("description")}
                                     {item.showDescription ? (
                                       <ChevronUp className="w-3 h-3" />
                                     ) : (
@@ -620,7 +620,8 @@ export default function BasketPage() {
                                               }
                                               className="px-3 py-1 bg-emerald-500 text-white rounded text-sm flex items-center gap-1"
                                             >
-                                              <Check className="w-3 h-3" /> Save
+                                              <Check className="w-3 h-3" />{" "}
+                                              {t("save")}
                                             </button>
                                             <button
                                               onClick={() =>
@@ -630,7 +631,7 @@ export default function BasketPage() {
                                               }
                                               className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm"
                                             >
-                                              Cancel
+                                              {t("cancel")}
                                             </button>
                                           </div>
                                         </div>
@@ -726,26 +727,26 @@ export default function BasketPage() {
                   {/* Shipping Options */}
                   <div className="bg-white rounded-2xl shadow-sm p-6 border border-emerald-100">
                     <h2 className="text-lg font-medium text-gray-800 mb-4">
-                      Shipping Options
+                      {t("shippingOptions")}
                     </h2>
                     <div className="space-y-3">
                       {[
                         {
                           value: "standard",
-                          name: "Standard Shipping",
-                          time: "5-7 business days",
+                          name: t("standardShipping"),
+                          time: `5-7 ${t("businessDays")}`,
                           price: 5,
                         },
                         {
                           value: "express",
-                          name: "Express Shipping",
-                          time: "2-3 business days",
+                          name: t("expressShipping"),
+                          time: `2-3 ${t("businessDays")}`,
                           price: 15,
                         },
                         {
                           value: "overnight",
-                          name: "Overnight Shipping",
-                          time: "Next day delivery",
+                          name: t("overnightShipping"),
+                          time: t("nextDayDelivery"),
                           price: 25,
                         },
                       ].map((option) => (
@@ -780,21 +781,21 @@ export default function BasketPage() {
                   {/* Promo Code */}
                   <div className="bg-white rounded-2xl shadow-sm p-6 border border-emerald-100">
                     <h2 className="text-lg font-medium text-gray-800 mb-4">
-                      Promo Code
+                      {t("promoCode")}
                     </h2>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Enter code"
+                        placeholder={t("enterCode")}
                         className="flex-1 border border-emerald-200 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300"
                       />
                       <button
                         onClick={applyPromoCode}
                         className="bg-linear-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-full hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md"
                       >
-                        Apply
+                        {t("apply")}
                       </button>
                     </div>
                     {promoMessage && (
@@ -811,38 +812,38 @@ export default function BasketPage() {
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-2xl shadow-sm p-6 border border-emerald-100 sticky top-6">
                     <h2 className="text-xl font-medium text-gray-800 mb-6">
-                      Order Summary
+                      {t("orderSummary")}
                     </h2>
                     <div className="space-y-3 mb-6">
                       <div className="flex justify-between text-gray-600">
-                        <span>Subtotal</span>
+                        <span>{t("subtotal")}</span>
                         <span className="font-medium">
                           ${subtotal.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-gray-600">
-                        <span>Shipping</span>
+                        <span>{t("shipping")}</span>
                         <span className="font-medium">
                           ${shippingCost.toFixed(2)}
                         </span>
                       </div>
                       {discount > 0 && (
                         <div className="flex justify-between text-emerald-600">
-                          <span>Discount</span>
+                          <span>{t("discount")}</span>
                           <span className="font-medium">
                             -${discount.toFixed(2)}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between text-gray-600">
-                        <span>Tax (7.5%)</span>
+                        <span>{t("tax")}</span>
                         <span className="font-medium">
                           ${calculateTax().toFixed(2)}
                         </span>
                       </div>
                       <div className="border-t border-emerald-100 pt-4 mt-4">
                         <div className="flex justify-between font-semibold text-lg">
-                          <span className="text-gray-800">Total</span>
+                          <span className="text-gray-800">{t("total")}</span>
                           <span className="text-emerald-600">
                             ${total.toFixed(2)}
                           </span>
@@ -854,11 +855,11 @@ export default function BasketPage() {
                       className="w-full bg-linear-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-full font-medium hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md flex items-center justify-center gap-2 mb-4"
                     >
                       <Lock className="w-5 h-5" />
-                      Secure Checkout
+                      {t("secureCheckout")}
                     </button>
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                       <Shield className="w-4 h-4" />
-                      <span>Secure & encrypted</span>
+                      <span>{t("secureEncrypted")}</span>
                     </div>
                   </div>
                 </div>
@@ -871,7 +872,7 @@ export default function BasketPage() {
                 <Link href="/shop">
                   <button className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center gap-2">
                     <ArrowLeft className="w-4 h-4" />
-                    Continue Shopping
+                    {t("continueShopping")}
                   </button>
                 </Link>
                 <div className="flex gap-4">
@@ -880,7 +881,7 @@ export default function BasketPage() {
                     className="text-gray-400 hover:text-rose-500 transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Clear Cart
+                    {t("clearCart")}
                   </button>
                 </div>
               </div>

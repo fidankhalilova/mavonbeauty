@@ -1,9 +1,15 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export default function Slogan() {
+  const t = useTranslations("AboutUs");
+
   return (
     <div>
       <div>
         <h1 className="text-5xl text-[#333] font-bold text-center mb-8 px-50 tracking-wide leading-14">
-          Share information about your brand with your customers.
+          {t("slogan")}
         </h1>
       </div>
       <div className="w-full h-173.75">

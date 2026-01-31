@@ -1,0 +1,452 @@
+{
+  "Navbar": {
+    "home": "Ana Səhifə",
+    "shop": "Mağaza",
+    "blog": "Bloq",
+    "aboutUs": "Haqqımızda",
+    "faq": "Tez-tez verilən suallar",
+    "contactUs": "Əlaqə",
+    "searchPlaceholder": "Məhsul axtar...",
+    "searching": "Axtarılır...",
+    "startTyping": "Məhsul axtarmaq üçün yazmağa başlayın",
+    "noProductsFound": "Məhsul tapılmadı",
+    "noResultsFor": "Nəticə yoxdur",
+    "myProfile": "Profilim",
+    "adminPanel": "Admin Paneli",
+    "quickAccess": "Sürətli Giriş",
+    "products": "Məhsullar",
+    "users": "İstifadəçilər",
+    "analytics": "Analitika",
+    "myOrders": "Sifarişlərim",
+    "logout": "Çıxış",
+    "login": "Giriş",
+    "register": "Qeydiyyat",
+    "close": "Bağla"
+  },
+  "Blog": {
+    "news": "Xəbərlər",
+    "featuredArticleTitle": "Təbii Gözəllik Görünüşü üçün 5 Zəruri",
+    "featuredArticleDesc": "Təbii gözəllik görünüşü sizin təbii xüsusiyyətlərinizi vurğulamaq və çox boyalı görünmədən ən yaxşınız kimi görünməkdir. Təbii gözəllik üçün beş əsas...",
+    "readMore": "Daha çox oxu",
+    "article1Title": "Ən Yaxşınız kimi Görünmək və Hiss Etmək",
+    "article1Desc": "Ən yaxşınız kimi görünmək və hiss etmək ümumi rifahınız üçün çox vacibdir. Yaxşı göründükdə özünüzü yaxşı hiss edirsiniz və yaxşı hiss etdikdə hər şeyi edə bilərsiniz. Burada...",
+    "article2Title": "Özünə Qayğı Göstərməyin Əhəmiyyəti",
+    "article2Desc": "Özünə qayğı göstərmə öz rifahını və xoşbəxtliyini aktiv şəkildə qorumaq vərdişidir. Bu, öz sağlamlığınızı, xoşbəxtliyinizi, fiziki və mənəvi rifahınızı qorumaq və ya yaxşılaşdırmaq üçün addımlar atmağı əhatə edir. Özünə qayğı...",
+    "article3Title": "Təbii Gözəlliyin Sirrləri",
+    "article3Desc": "Təbii gözəllik fərdi xüsusiyyətlərinizi qiymətləndirmək və daxili parlaqlığınızın parlamasına icazə verməkdir. Bu, öz bədəninizdə təhlükəsiz və rahat hiss etməkdir. Burada...",
+    "article4Title": "Ən Yaxşınız kimi Görünmək və Hiss Etmək",
+    "article4Desc": "Ən yaxşınız kimi görünmək və hiss etmək ümumi rifahınız üçün çox vacibdir. Yaxşı göründükdə özünüzü yaxşı hiss edirsiniz və yaxşı hiss etdikdə hər şeyi edə bilərsiniz. Burada...",
+    "article5Title": "Sərtlərdən Necə Qurtulmaq",
+    "article5Desc": "Hər yaşdan insanlar sərt adlanan dəri xəstəliyinə həssasdır. Bu, bakteriyalar, artıq yağ istehsalı və ölü dəri daxil olmaqla bir sıra amillər tərəfindən yaranır...",
+    "subscribeTitle": "E-poçtlarımıza abunə olun",
+    "subscribeDesc": "Yeni kolleksiyalar və eksklüziv təkliflər haqqında ilk məlumat olun.",
+    "emailPlaceholder": "E-poçtunuzu daxil edin",
+    "monthJune": "İyun 2023",
+    "author": "Eleyas Ahmed"
+  },
+  "Footer": {
+    "about": "Haqqımızda",
+    "aboutDescription": "Bu mətn sahəsindən müştərilərinizə brendiniz və vizyonunuz haqqında məlumat verin. Bunu mövzu redaktorunda dəyişə bilərsiniz.",
+    "quickLinks": "Sürətli Keçidlər",
+    "search": "Axtarış",
+    "privacyPolicy": "Məxfilik Siyasəti",
+    "termsOfService": "Xidmət Şərtləri",
+    "account": "Hesab",
+    "explore": "Kəşf Edin",
+    "contact": "Əlaqə",
+    "refundPolicy": "Geri Qaytarma Siyasəti",
+    "shippingReturns": "Çatdırılma və Qaytarılma",
+    "contactInfo": "Əlaqə Məlumatı",
+    "contactDescription": "Mağazanın fiziki ünvanı, əlaqə məlumatları, iş saatları və s. kimi məlumatları paylaşın.",
+    "copyright": "© 2026, Mavon - Sağlamlıq və Gözəllik Shopify Mövzusu Shopify tərəfindən gücləndirilir",
+    "language": "Dil",
+    "english": "İngilis",
+    "spanish": "İspan",
+    "french": "Fransız"
+  },
+  "ContactUs": {
+    "title": "Bizimlə əlaqə:",
+    "information": "Məlumat",
+    "informationDescription": "Mağazanın fiziki ünvanı, əlaqə məlumatları, iş saatları və s. kimi məlumatları paylaşın.",
+    "customerService": "Müştəri xidməti",
+    "customerServiceEmail": "company@demo.com",
+    "address": "Ünvan:",
+    "addressDescription": "Müştərilərinizin mağazanızı tapa bilməsi üçün şirkətinizin ünvanını paylaşın.",
+    "youCanContactUs": "Hər zaman bizimlə əlaqə saxlaya bilərsiniz.",
+    "pleaseComplete": "Zəhmət olmasa aşağıdakı sahələri doldurun.",
+    "name": "Ad",
+    "email": "E-poçt",
+    "phoneNumber": "Telefon nömrəsi",
+    "comment": "Şərh",
+    "send": "Göndər"
+  },
+  "AboutUs": {
+    "pageTitle": "Haqqımızda",
+    "home": "Ana Səhifə",
+    "aboutUs": "Haqqımızda",
+    "aboutStore": "Mağazanız haqqında",
+    "aboutStoreDescription": "Mənim mağazam kiçik, müstəqil bir əməliyyatdır və hal-hazırda böyük onlayn marketpleyslərdə yoxdur. Bu, mənim yeni bir iş olduğum və hələ də mağazamı qurma prosesində olduğum üçündür. Bununla belə, müştərilərimə əlaqə məlumatlarımı təqdim etməklə və mağazamı sosial mediada təşviq etməklə, hələ də məhsullarımı və xidmətlərimi satmağa davam edirəm.",
+    "customerImportance": "Müştəriləriniz brendiniz haqqında məlumatlandırılmalıdır.",
+    "customerImportanceDescription": "Mən müştərilərimə məqbul qiymətə yüksək keyfiyyətli məhsullar və xidmətlər təqdim etməyə həsr olunmuşam. Həm də əla müştəri xidməti təqdim etməyə həsr olunmuşam. Müştərilərimin suallarına cavab verməkdən həmişə məmnunam və onların alış-verişdən razı qalmasını təmin etmək üçün həmişə əlavə səy göstərməyə hazıram.",
+    "slogan": "Brendiniz haqqında məlumatları müştərilərinizlə paylaşın.",
+    "subscribeToEmails": "E-poçtlarımıza abunə olun",
+    "subscribeDescription": "Yeni kolleksiyalar və eksklüziv təkliflər haqqında ilk məlumat olun.",
+    "enterEmail": "E-poçtunuzu daxil edin"
+  },
+  "Home": {
+    "hero": {
+      "title": "Təbii Gözəlliyin Gücünü Kəşf Edin",
+      "description": "Brendinizin hekayəsini şəkillər vasitəsilə danışın. Onlar auditoriyanızın diqqətini cəlb edə və mesajınızı çatdıra bilər",
+      "shopNow": "İNDİ ALIN"
+    },
+    "featuredProducts": {
+      "sectionTitle": "Seçilmiş Məhsullar",
+      "addToCart": "Səbətə əlavə et"
+    },
+    "productCards": {
+      "card1": {
+        "title": "Daxili Gözəlliyinizi Açığa Çıxarın",
+        "discount": "50%-DƏK ENDİRİM",
+        "buttonText": "İNDİ ALIN"
+      },
+      "card2": {
+        "title": "Öz Unikallığınızı Qəbul Edin",
+        "discount": "30%-DƏK ENDİRİM",
+        "buttonText": "İNDİ ALIN"
+      },
+      "card3": {
+        "title": "Gözəlliyinizi Açığa Çıxarın",
+        "discount": "50%-DƏK ENDİRİM",
+        "buttonText": "İNDİ ALIN"
+      }
+    },
+    "mostPopular": {
+      "sectionTitle": "Ən Populyar"
+    },
+    "productDetail": {
+      "brand": "MAVON BEAUTY",
+      "productName": "Cetaphil Qayğılı Dəri Təmizləyicisi",
+      "price": "$500.00",
+      "reviews": "(1)",
+      "stockWarning": "Ancaq 56 ədəd stokda var!",
+      "color": "Rəng:",
+      "colorName": "Şaftalı-narıncı",
+      "weight": "Çəki:",
+      "quantity": "Say",
+      "addToCart": "Səbətə Əlavə Et",
+      "buyNow": "İndi alın",
+      "reviewsButton": "Rəylər",
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "share": "Paylaş",
+      "features": [
+        "Quru əlləri dərindən nəmləndirir və qidalandırır",
+        "Dəriyə sakitləşdirici xüsusiyyətlər",
+        "Uzun müddətli nəmləndirmə",
+        "Ümumi əl sağlamlığını və görünüşünü yaxşılaşdırır"
+      ]
+    },
+    "brandInfo": {
+      "title": "Müştərilərinizə brendiniz haqqında məlumat verin. Bir məhsulu təsvir edin, elanlar edin və ya müştərilərinizi mağazanıza xoş gəldiniz deyin."
+    },
+    "shopByCollection": {
+      "sectionTitle": "Kolleksiyaya görə alış-veriş edin",
+      "nailCare": "Dırnaq qayğısı",
+      "skinCare": "Dəri qayğısı",
+      "makeup": "Makiyaj",
+      "bodyCare": "Bədən Qayğısı",
+      "hairCare": "Saç Qayğısı",
+      "fragrance": "Ətirlər"
+    },
+    "subscribe": {
+      "title": "E-poçtlarımıza abunə olun",
+      "description": "Yeni kolleksiyalar və eksklüziv təkliflər haqqında ilk məlumat olun.",
+      "emailPlaceholder": "E-poçtunuzu daxil edin"
+    },
+    "testimonials": {
+      "sectionTitle": "Rəy",
+      "testimonial1": {
+        "title": "Sadəcə Fövqəladə",
+        "content": "Rəy üçün təşəkkürlər. Həmişə məhsulumuzu təkmilləşdirməyə çalışırıq və bu məsələni sizinlə birlikdə araşdırmaq istərdik.",
+        "authorName": "Müəllif",
+        "authorPosition": "CEO"
+      },
+      "testimonial2": {
+        "title": "Həqiqi Oyun Dəyişdirici",
+        "content": "Rəy üçün təşəkkürlər. Həmişə məhsulumuzu təkmilləşdirməyə çalışırıq və bu məsələni sizinlə birlikdə araşdırmaq istərdik.",
+        "authorName": "Müəllif",
+        "authorPosition": "CTO"
+      },
+      "testimonial3": {
+        "title": "Fövqəladə Keyfiyyət",
+        "content": "Rəy üçün təşəkkürlər. Həmişə məhsulumuzu təkmilləşdirməyə çalışırıq və bu məsələni sizinlə birlikdə araşdırmaq istərdik.",
+        "authorName": "Müəllif",
+        "authorPosition": "CFO"
+      }
+    },
+    "textSlider": {
+      "message1": "İnanılmaz Endirimlər!",
+      "message2": "Daha Ağıllı Alın, Daha Çox Qənaət Edin!",
+      "message3": "Qənaət Cənnətinə Gəlin!"
+    }
+  },
+  "Shop": {
+    "offer": {
+      "limitedTimeOffer": "Məhdud Müddətli Təklif",
+      "discount": "50% ENDİRİM"
+    },
+    "header": {
+      "pageTitle": "Məhsullar",
+      "home": "Ana Səhifə",
+      "shop": "Mağaza"
+    },
+    "main": {
+      "filter": "Filtr:",
+      "availability": "Mövcudluq",
+      "inStock": "Stokda var",
+      "outOfStock": "Stokda yoxdur",
+      "price": "Qiymət",
+      "highestPrice": "Ən yüksək qiymət $",
+      "priceRange": "Qiymət: $ - $",
+      "color": "Rəng",
+      "brand": "Brend",
+      "size": "Ölçü",
+      "sortBy": "Sırala:",
+      "sortOptions": {
+        "nameAsc": "Əlifba sırası ilə, A-Z",
+        "nameDesc": "Əlifba sırası ilə, Z-A",
+        "priceAsc": "Qiymətə görə, aşağıdan yuxarıya",
+        "priceDesc": "Qiymətə görə, yuxarıdan aşağıya",
+        "dateOld": "Tarixə görə, köhnədən yeniə",
+        "dateNew": "Tarixə görə, yeniədən köhnəyə"
+      },
+      "products": "məhsul",
+      "showing": "göstərilir",
+      "activeFilters": {
+        "brand": "Brend:",
+        "color": "Rəng:",
+        "size": "Ölçü:",
+        "inStockOnly": "Yalnız Stokda Olanlar",
+        "outOfStockOnly": "Yalnız Stokda Olmayanlar",
+        "min": "Min: $",
+        "max": "Maks: $",
+        "clearAll": "Bütün filtrləri təmizlə"
+      },
+      "noProducts": "Filtrlərinizə uyğun məhsul tapılmadı",
+      "tryAgain": "Yenidən cəhd edin"
+    },
+    "suggestions": {
+      "title": "Sizə də xoş gələ bilər"
+    },
+    "subscribe": {
+      "title": "E-poçtlarımıza abunə olun",
+      "description": "Yeni kolleksiyalar və eksklüziv təkliflər haqqında ilk məlumat olun.",
+      "emailPlaceholder": "E-poçtunuzu daxil edin"
+    }
+  },
+  "FAQ": {
+    "pageTitle": "Tez-tez verilən suallar",
+    "breadcrumbHome": "Ana Səhifə",
+    "breadcrumbFAQ": "Tez-tez verilən suallar",
+    "section1Title": "Makiyaj və Gözəllik",
+    "section2Title": "Dəri Qayğısı",
+    "section3Title": "Dırnaq Qayğısı",
+    "questions": {
+      "makeup1": "Makiyajı çıxartmağın ən yaxşı yolu nədir?",
+      "makeup1Answer": "Zərif bir təmizləyici, dərinizi təbii yağlarından məhrum etmədən makiyajı çıxaracaq. Dərinizin gözeneklərini tıxamayan, yağsız və komedogen olmayan bir təmizləyici axtarın.",
+      "makeup2": "Günəş kremi istifadə etməyin faydaları nələrdir?",
+      "makeup2Answer": "Günəş kremi dərinizi zərərli UV şüalarından qoruyur, erkən yaşlanmanın qarşısını alır, dəri xərçəngi riskini azaldır və bərabər dəri rənginin qorunmasına kömək edir.",
+      "makeup3": "Saç tökülməsinin qarşısını almağın bəzi yolları nələrdir?",
+      "makeup3Answer": "Protein və vitaminlərlə zəngin balanslaşdırılmış bir pəhriz saxlayın, həddindən artıq isti şəkilləndirmədən çəkinin, zərif saç məhsulları istifadə edin, stress səviyyəsini idarə edin və lazım olduqda dermatoloqa müraciət edin.",
+      "makeup4": "Saç tökülməsinin qarşısını necə ala bilərəm?",
+      "makeup4Answer": "Baş dərisini müntəzəm yumaqla sağlam saxlayın, sıx saç düzəlişlərindən çəkinin, sulfatsız şampunlar istifadə edin, kifayət qədər yuxu alın və biotin və dəmir ilə adekvat qidalanma təmin edin.",
+      "skincare1": "Sərtlərdən necə qurtula bilərəm?",
+      "skincare1Answer": "Düşündüyünüz kimi istədiyiniz hər şeyi edə bilərsiniz. Sadəcə hər yerdə mavini düşünün. Sadəcə bu şeyləri ağlınızda düşünün və onları kətanın üzərinə atın.",
+      "skincare2": "Təbii gözəlliyimi necə vurğulaya bilərəm?",
+      "skincare2Answer": "Təmizləmə, nəmləndirmə və günəşdən qorunma kimi dəri qayğısının əsaslarına diqqət yetirin. Kifayət qədər yuxu alın, su balansını qoruyun, balanslaşdırılmış pəhriz saxlayın və özünəməxsus xüsusiyyətlərinizi özünüəminliklə qəbul edin.",
+      "skincare3": "Ən son gözəllik tendensiyaları hansılardır?",
+      "skincare3Answer": "Cari tendensiyalara təmiz gözəllik məhsulları, minimal makiyaj görünüşləri, dəri dövriyyəsi rejimləri, davamlı qablaşdırma və dəri təhlilinə əsaslanan fərdiləşdirilmiş dəri qayğısı daxildir.",
+      "skincare4": "Kişilər üçün bəzi gözəllik məsləhətləri hansılardır?",
+      "skincare4Answer": "Təmizləyici və nəmləndirici ilə sadə bir dəri qayğısı rejimi qurun, gündəlik SPF istifadə edin, üz tüklərinə müntəzəm qulluq edin, su balansını qoruyun və göz kremi və dodaq balsamını laqeyd qoymayın.",
+      "nails1": "Gözəllik üçün ilhamı haradan tapa bilərəm?",
+      "nails1Answer": "Sağlam dəri insanlar üçündür, bir çox şey var, onlar həmişə bir nəmləndirici istifadə etmə prosesində bunun nə olduğunu bilmirlər. Arqument olaraq məhsul—",
+      "nails2": "Dırnaq lakı tətbiq etmək üçün bəzi məsləhətlər hansılardır?",
+      "nails2Answer": "Təmiz, quru dırnaqlarla başlayın. Bir əsas təbəqə tətbiq edin, sonra iki nazik rəng təbəqəsi və bir üst təbəqə ilə bitirin. Hər bir təbəqəni növbəti təbəqəni tətbiq etməzdən əvvəl tamamilə qurumağa buraxın.",
+      "nails3": "Bədəninizə qulluq etmək üçün bəzi məsləhətlər hansılardır?",
+      "nails3Answer": "Gündəlik nəmləndirin, həftəlik eksfoliasiya edin, çox su için, qidalı qidalarla qidalanın, müntəzəm idman edin, kifayət qədər yuxu alın və dərinizi günəş ziyanından qoruyun.",
+      "nails4": "Qırışlardan qurtulmaq üçün bəzi məsləhətlər hansılardır?",
+      "nails4Answer": "Retinol məhsulları istifadə edin, gündəlik günəş kremi tətbiq edin, dəri nəmini qoruyun, kifayət qədər yuxu alın, siqaret çəkməkdən çəkinin, su balansını qoruyun və kimyəvi təmizləmələr və ya mikroinqilab kimi peşəkar müalicələri nəzərdən keçirin."
+    }
+  },
+  "Auth": {
+    "forgotPassword": "Şifrəni Unutmusunuz",
+    "forgotPasswordDesc": "Şifrə sıfırlama linkini almaq üçün e-poçtunuzu daxil edin",
+    "emailAddress": "E-poçt Ünvanı",
+    "sendResetLink": "Sıfırlama Linki Göndər",
+    "sending": "Göndərilir...",
+    "rememberPassword": "Şifrənizi xatırlayırsınız?",
+    "signIn": "Daxil ol",
+    "resetPassword": "Şifrənizi Sıfırlayın",
+    "resetPasswordDesc": "Yeni şifrənizi aşağıya daxil edin",
+    "newPassword": "Yeni Şifrə",
+    "confirmNewPassword": "Yeni Şifrəni Təsdiqlə",
+    "resetting": "Sıfırlanır...",
+    "enterEmailPlaceholder": "siz@example.com",
+    "enterPasswordPlaceholder": "Yeni şifrə daxil edin",
+    "confirmPasswordPlaceholder": "Yeni şifrəni təsdiqlə",
+    "min8Chars": "Ən azı 8 simvol olmalıdır",
+    "verifyingLink": "Link Yoxlanılır",
+    "verifyingLinkDesc": "Zəhmət olmasa sıfırlama linkinizi yoxladığımız müddətdə gözləyin...",
+    "invalidLink": "Keçərsiz və ya Müddəti Bitmiş Link",
+    "invalidLinkDesc": "Bu şifrə sıfırlama linki keçərsizdir və ya müddəti bitmişdir. Zəhmət olmasa yeni bir link tələb edin.",
+    "requestNewLink": "Yeni Sıfırlama Linki Tələb Edin",
+    "backToLogin": "Girişə Qayıt",
+    "errors": {
+      "emailRequired": "Zəhmət olmasa e-poçt ünvanınızı daxil edin",
+      "passwordRequired": "Şifrə ən azı 8 simvol olmalıdır",
+      "passwordsMatch": "Şifrələr uyğun gəlmir",
+      "invalidLink": "Keçərsiz sıfırlama linki",
+      "networkError": "Şəbəkə xətası. Zəhmət olmasa yenidən cəhd edin."
+    },
+    "messages": {
+      "resetLinkSent": "Şifrə sıfırlama linki e-poçtunuza göndərildi",
+      "passwordResetSuccess": "Şifrə uğurla sıfırlandı. Giriş səhifəsinə yönləndirilir..."
+    }
+  },
+  "Orders": {
+    "pageTitle": "Sifarişlərim",
+    "trackManage": "Sifarişlərinizi izləyin və idarə edin",
+    "refresh": "Yenilə",
+    "shopMore": "Daha Çox Al",
+    "filterByStatus": "Statusa görə filtr:",
+    "all": "Hamısı",
+    "pending": "Gözləyən",
+    "paid": "Ödənilmiş",
+    "processing": "Emal olunur",
+    "shipped": "Göndərilib",
+    "delivered": "Çatdırılıb",
+    "cancelled": "Ləğv edilib",
+    "noOrdersFound": "Sifariş tapılmadı",
+    "whenPlaceOrders": "Sifariş verdikdə, burada görünəcək",
+    "startShopping": "Alış-Verişə Başla",
+    "orderNumber": "Sifariş #{{number}}",
+    "placedOn": "Tarix: {{date}}",
+    "deliveredOn": "Çatdırılma tarixi: {{date}}",
+    "viewDetails": "Ətraflı Bax",
+    "shippingAddress": "Çatdırılma ünvanı",
+    "tracking": "İzləmə",
+    "items": "{{count}} məhsul",
+    "items_plural": "{{count}} məhsul",
+    "subtotal": "Ara cəmi:",
+    "shipping": "Çatdırılma:",
+    "total": "Cəmi:",
+
+    "orderDetails": "Sifariş Detalları",
+    "backToOrders": "Sifarişlərə Qayıt",
+    "printInvoice": "Fakturanı Çap et",
+    "orderSummary": "Sifariş Xülasəsi",
+    "orderItems": "Sifariş Məhsulları",
+    "shippingInfo": "Çatdırılma Məlumatı",
+    "paymentInfo": "Ödəniş Məlumatı",
+    "paymentMethod": "Ödəniş Metodu",
+    "cardNumber": "Kart Nömrəsi",
+    "transactionId": "Tranzaksiya ID",
+    "paymentDate": "Ödəniş Tarixi",
+    "orderDate": "Sifariş Tarixi",
+    "shippingMethod": "Çatdırılma Metodu",
+    "discount": "Endirim",
+    "tax": "Vergi",
+    "needHelp": "Kömək Lazımdır?",
+    "contactSupport": "Müştəri Dəstəyi ilə Əlaqə",
+    "requestReturn": "Qaytarma Tələb et",
+    "viewReturnPolicy": "Qaytarma Siyasətinə Bax",
+    "orderNotes": "Sifariş Qeydləri",
+
+    "statusMessages": {
+      "delivered": "Çatdırılma tarixi: {{date}}",
+      "shipped": "Göndərilib {{trackingInfo}}",
+      "processing": "Sifarişiniz emal olunur"
+    },
+
+    "alertOrderSuccess": "Sifariş #{{orderId}} uğurla verildi! 🎉",
+
+    "errorLoadingOrders": "Sifarişlər yüklənmədi. Zəhmət olmasa yenidən cəhd edin.",
+    "errorLoadingOrder": "Sifariş detalları yüklənmədi. Zəhmət olmasa yenidən cəhd edin.",
+    "orderNotFound": "Sifariş tapılmadı",
+
+    "loadingOrders": "Sifarişləriniz yüklənir...",
+    "loadingOrderDetails": "Sifariş detalları yüklənir..."
+  },
+  "ShopDetail": {
+    "subscribe": {
+      "title": "E-poçtlarımıza abunə olun",
+      "description": "Yeni kolleksiyalar və eksklüziv təkliflər haqqında ilk məlumat olun.",
+      "emailPlaceholder": "E-poçtunuzu daxil edin"
+    },
+    "recentlyViewed": "Son baxılan məhsul",
+    "recommendedProducts": "Tövsiyə olunan məhsullar",
+    "youMayAlsoLike": "Sizə də xoş gələ bilər",
+    "breadcrumbHome": "Ana Səhifə",
+    "sku": "SKU:",
+    "vendor": "Satıcı:",
+    "onlyItems": "Ancaq {{count}} ədəd stokda var!",
+    "outOfStock": "Stokda Yoxdur",
+    "color": "Rəng",
+    "size": "Ölçü",
+    "weight": "Çəki",
+    "quantity": "Say",
+    "addToCart": "Səbətə Əlavə Et",
+    "buyNow": "İndi alın",
+    "description": "Təsvir",
+    "reviews": "Rəylər",
+    "terms": "Şərtlər və qaydalar",
+    "askQuestion": "Sual verin",
+    "facebook": "Facebook",
+    "twitter": "Twitter",
+    "pinterest": "Pinlə",
+    "shareMore": "Daha çox paylaş",
+    "readyFashion": "Yeni bir modaya hazırsınız",
+    "shopNow": "İndi alın",
+
+    "ratingDistribution": "Reyting Paylanması",
+    "yourReview": "Rəyiniz",
+    "editReview": "Rəyi Redaktə et",
+    "deleteReview": "Sil",
+    "writeReview": "Rəy Yazın",
+    "cancelReview": "Rəyi Ləğv et",
+    "pleaseLogin": "Rəy yazmaq üçün daxil olun",
+    "loginNow": "İndi Daxil ol",
+    "editYourReview": "Rəyinizi Redaktə edin",
+    "writeYourReview": "Rəyinizi Yazın",
+    "yourRating": "Reytinginiz",
+    "selectedRating": "Seçildi: {{rating}} ulduz",
+    "yourComment": "Şərhiniz",
+    "commentPlaceholder": "Bu məhsulla bağlı təcrübənizi paylaşın...",
+    "characters": "simvol",
+    "cancel": "Ləğv et",
+    "updateReview": "Rəyi Yenilə",
+    "submitReview": "Rəyi Təqdim et",
+    "submitting": "Göndərilir...",
+    "customerReviews": "Müştəri Rəyləri ({{count}})",
+    "noReviews": "Hələ rəy yoxdur. Bu məhsul üçün ilk rəy verən olun!",
+    "loadingReviews": "Rəylər yüklənir...",
+    "review": "rəy",
+    "reviews_plural": "rəy",
+
+    "alertLogin": "Rəy təqdim etmək üçün daxil olun",
+    "alertRating": "Zəhmət olmasa reyting seçin",
+    "alertComment": "Zəhmət olmasa şərh yazın",
+    "alertReviewUpdated": "Rəy uğurla yeniləndi!",
+    "alertReviewSubmitted": "Rəy uğurla təqdim edildi!",
+    "confirmDelete": "Rəyinizi silmək istədiyinizə əminsiniz?",
+    "alertReviewDeleted": "Rəy uğurla silindi",
+
+    "loadingProduct": "Məhsul yüklənir...",
+    "addingToCart": "Əlavə olunur...",
+    "processing": "Emal olunur...",
+
+    "productNotFound": "Məhsul tapılmadı",
+    "failedToLoad": "Məhsul yüklənmədi",
+    "backToShop": "Mağazaya Qayıt"
+  }
+}

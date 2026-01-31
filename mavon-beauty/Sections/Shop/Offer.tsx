@@ -1,4 +1,7 @@
+"use client";
+import { useTranslations } from "next-intl";
 export default function Offer() {
+  const t = useTranslations("Shop.offer");
   return (
     <div className="w-full h-75 overflow-hidden">
       <div className="border-2 border-dashed border-gray-300 h-full">
@@ -18,7 +21,7 @@ export default function Offer() {
                     fontWeight: 300,
                   }}
                 >
-                  OFF
+                  {t("discount").split(" ")[1]}
                 </span>
               </h2>
             </div>

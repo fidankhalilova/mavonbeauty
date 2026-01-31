@@ -9,11 +9,11 @@ import {
   AlertCircle,
   ExternalLink,
   Filter,
-  Download,
   RefreshCw,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface OrderItem {
   _id: string;
@@ -65,6 +65,8 @@ export default function OrdersView() {
   const [filter, setFilter] = useState<string>("all");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("Orders");
+  const tNavbar = useTranslations("Navbar");
 
   useEffect(() => {
     fetchOrders();
@@ -74,11 +76,11 @@ export default function OrdersView() {
     const orderId = searchParams.get("orderId");
 
     if (success === "true" && orderId) {
-      alert(`Order #${orderId} placed successfully! 🎉`);
+      alert(t("alertOrderSuccess", { orderId }));
       // Remove query params from URL
       router.replace("/orders");
     }
-  }, [filter, router, searchParams]);
+  }, [filter, router, searchParams, t]);
 
   const fetchOrders = async () => {
     try {
@@ -104,11 +106,11 @@ export default function OrdersView() {
       if (data.success) {
         setOrders(data.data || []);
       } else {
-        setError(data.message || "Failed to fetch orders");
+        setError(data.message || t("errorLoadingOrders"));
       }
     } catch (error: any) {
       console.error("Error fetching orders:", error);
-      setError("Failed to load orders. Please try again.");
+      setError(t("errorLoadingOrders"));
     } finally {
       setLoading(false);
     }
@@ -163,13 +165,17 @@ export default function OrdersView() {
     });
   };
 
+  const getStatusTranslation = (status: string) => {
+    return t(status as keyof typeof t);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-block w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading your orders...</p>
+            <p className="mt-4 text-gray-600">{t("loadingOrders")}</p>
           </div>
         </div>
       </div>
@@ -184,9 +190,9 @@ export default function OrdersView() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl font-light text-gray-800 tracking-wide">
-                My Orders
+                {t("pageTitle")}
               </h1>
-              <p className="text-gray-600 mt-2">Track and manage your orders</p>
+              <p className="text-gray-600 mt-2">{t("trackManage")}</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -194,12 +200,12 @@ export default function OrdersView() {
                 className="text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-2"
               >
                 <RefreshCw className="w-5 h-5" />
-                Refresh
+                {t("refresh")}
               </button>
               <Link href="/shop">
                 <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
                   <Home className="w-5 h-5" />
-                  Shop More
+                  {t("shopMore")}
                 </button>
               </Link>
             </div>
@@ -214,7 +220,7 @@ export default function OrdersView() {
               onClick={fetchOrders}
               className="ml-auto text-red-600 hover:text-red-800"
             >
-              Retry
+              {t("refresh")}
             </button>
           </div>
         )}
@@ -224,7 +230,7 @@ export default function OrdersView() {
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-gray-400" />
             <span className="text-sm font-medium text-gray-700">
-              Filter by status:
+              {t("filterByStatus")}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -246,7 +252,7 @@ export default function OrdersView() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {getStatusTranslation(status)}
                 {status !== "all" && (
                   <span className="ml-1">
                     ({orders.filter((o) => o.status === status).length})
@@ -261,13 +267,11 @@ export default function OrdersView() {
         {orders.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-2xl">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg mb-2">No orders found</p>
-            <p className="text-gray-400 mb-6">
-              When you place orders, they will appear here
-            </p>
+            <p className="text-gray-500 text-lg mb-2">{t("noOrdersFound")}</p>
+            <p className="text-gray-400 mb-6">{t("whenPlaceOrders")}</p>
             <Link href="/shop">
               <button className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                Start Shopping
+                {t("startShopping")}
               </button>
             </Link>
           </div>
@@ -285,15 +289,17 @@ export default function OrdersView() {
                       <div className="flex items-center gap-3 mb-2">
                         {getStatusIcon(order.status)}
                         <h3 className="text-lg font-semibold text-gray-800">
-                          Order #{order.orderNumber}
+                          {t("orderNumber", { number: order.orderNumber })}
                         </h3>
                       </div>
                       <p className="text-sm text-gray-500">
-                        Placed on {formatDate(order.orderedAt)}
+                        {t("placedOn", { date: formatDate(order.orderedAt) })}
                       </p>
                       {order.deliveredAt && (
                         <p className="text-sm text-gray-500 mt-1">
-                          Delivered on {formatDate(order.deliveredAt)}
+                          {t("deliveredOn", {
+                            date: formatDate(order.deliveredAt),
+                          })}
                         </p>
                       )}
                     </div>
@@ -301,15 +307,14 @@ export default function OrdersView() {
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
                       >
-                        {order.status.charAt(0).toUpperCase() +
-                          order.status.slice(1)}
+                        {getStatusTranslation(order.status)}
                       </span>
                       <p className="text-lg font-bold text-emerald-600">
                         ${order.total.toFixed(2)}
                       </p>
                       <Link href={`/orders/${order._id}`}>
                         <button className="flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700">
-                          View Details
+                          {t("viewDetails")}
                           <ExternalLink className="w-4 h-4" />
                         </button>
                       </Link>
@@ -377,7 +382,7 @@ export default function OrdersView() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <h4 className="font-medium text-gray-700 mb-2">
-                          Shipping Address
+                          {t("shippingAddress")}
                         </h4>
                         <p className="text-gray-600">
                           {order.shippingAddress.firstName}{" "}
@@ -392,7 +397,7 @@ export default function OrdersView() {
                       {order.trackingNumber && (
                         <div>
                           <h4 className="font-medium text-gray-700 mb-2">
-                            Tracking
+                            {t("tracking")}
                           </h4>
                           <div className="flex items-center gap-2">
                             <Truck className="w-5 h-5 text-gray-400" />
@@ -410,19 +415,18 @@ export default function OrdersView() {
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                   <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-600">
-                      {order.items.length} item
-                      {order.items.length !== 1 ? "s" : ""}
+                      {t("items", { count: order.items.length })}
                     </div>
                     <div className="text-right">
                       <div className="flex items-center gap-4">
                         <div className="text-sm">
-                          <span className="text-gray-600">Subtotal:</span>
+                          <span className="text-gray-600">{t("subtotal")}</span>
                           <span className="ml-2 font-medium">
                             ${order.subtotal.toFixed(2)}
                           </span>
                         </div>
                         <div className="text-sm">
-                          <span className="text-gray-600">Shipping:</span>
+                          <span className="text-gray-600">{t("shipping")}</span>
                           <span className="ml-2 font-medium">
                             ${order.shippingCost.toFixed(2)}
                           </span>

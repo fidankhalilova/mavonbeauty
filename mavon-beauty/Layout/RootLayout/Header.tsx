@@ -12,18 +12,19 @@ import {
   Shield,
   BarChart,
   X,
+  Globe,
 } from "lucide-react";
-import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { logoutUser, notifyUserChanged } from "@/service/authService";
 import {
-  getCurrentUser,
-  isAuthenticated,
-  logoutUser,
-  notifyUserChanged,
-} from "@/service/authService";
-import { setAccessTokenCookie, clearAccessTokenCookie } from "@/utils/cookieUtils";
+  setAccessTokenCookie,
+  clearAccessTokenCookie,
+} from "@/utils/cookieUtils";
 import { useCart } from "@/context/CardContext";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
+import { useCurrentLocale } from "@/hooks/useCurrentLocale";
 
 interface UserData {
   id: string;
@@ -48,35 +49,36 @@ interface Product {
 }
 
 const getProductId = (product: Product): string => {
-  return product._id || product.id || product.documentId || '';
+  return product._id || product.id || product.documentId || "";
 };
 
 const getProductImage = (product: Product): string | null => {
   if (product.images && product.images.length > 0) {
     const img = product.images[0];
-    if (img.startsWith('http')) return img;
-    if (img.startsWith('/')) return `http://localhost:3001${img}`;
+    if (img.startsWith("http")) return img;
+    if (img.startsWith("/")) return `http://localhost:3001${img}`;
     return img;
   }
   if (product.image) {
-    if (typeof product.image === 'string') {
+    if (typeof product.image === "string") {
       const img = product.image;
-      if (img.startsWith('http')) return img;
-      if (img.startsWith('/')) return `http://localhost:3001${img}`;
+      if (img.startsWith("http")) return img;
+      if (img.startsWith("/")) return `http://localhost:3001${img}`;
       return img;
     } else if (product.image.url) {
       const img = product.image.url;
-      if (img.startsWith('http')) return img;
-      if (img.startsWith('/')) return `http://localhost:3001${img}`;
+      if (img.startsWith("http")) return img;
+      if (img.startsWith("/")) return `http://localhost:3001${img}`;
       return img;
     }
   }
-  
+
   return null;
 };
 
 export default function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -85,9 +87,15 @@ export default function Navbar() {
   const [authenticated, setAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const languageMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const initRef = useRef<boolean>(false);
+
+  // i18n hooks - use next-intl navigation
+  const t = useTranslations("Navbar");
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const { getCartItemCount, redirectToCart, clearUserCart, currentUserId } =
     useCart();
@@ -204,6 +212,12 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false);
       }
+      if (
+        languageMenuRef.current &&
+        !languageMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsLanguageMenuOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -215,6 +229,7 @@ export default function Navbar() {
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
+
   useEffect(() => {
     const searchProducts = async () => {
       if (searchQuery.trim().length < 2) {
@@ -224,47 +239,60 @@ export default function Navbar() {
 
       console.log("Searching for:", searchQuery);
       setIsSearching(true);
+
       try {
-        let response;
-        let data;
-        console.log("Trying search endpoint...");
-        response = await fetch(
-          `http://localhost:3001/api/v1/products/search?q=${encodeURIComponent(searchQuery)}`
-        );
-        
-        if (!response.ok) {
-          console.log("Trying products endpoint with search param...");
-          response = await fetch(
-            `http://localhost:3001/api/v1/products?search=${encodeURIComponent(searchQuery)}`
+        const searchUrl = `http://localhost:3001/api/v1/products/search?q=${encodeURIComponent(searchQuery.trim())}`;
+        console.log("Trying search endpoint:", searchUrl);
+
+        let response = await fetch(searchUrl);
+
+        if (!response.ok || response.status === 404) {
+          console.log(
+            "Search endpoint not available, trying products endpoint with search param",
           );
+          const productsUrl = `http://localhost:3001/api/v1/products?search=${encodeURIComponent(searchQuery.trim())}`;
+          response = await fetch(productsUrl);
         }
-        
-        if (!response.ok) {
-          console.log("Getting all products and filtering client-side...");
-          response = await fetch('http://localhost:3001/api/v1/products');
-        }
-        
+
         if (response.ok) {
-          data = await response.json();
-          console.log("Response data:", data);
-          let products = data.products || data.data || [];
-          console.log("First product (if exists):", products[0]);
-          if (Array.isArray(products) && !response.url.includes('search') && !response.url.includes('?search=')) {
-            console.log("Filtering products client-side...");
-            products = products.filter((product: Product) =>
-              product.name?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            console.log("Filtered products:", products.length);
+          const data = await response.json();
+          console.log("Search response data:", data);
+
+          let products = [];
+
+          if (data.products) {
+            products = data.products;
+          } else if (data.data) {
+            products = data.data;
+          } else if (Array.isArray(data)) {
+            products = data;
           }
-          
-          setSearchResults(products.slice(0, 10)); 
-          console.log("Found", products.length, "products");
+
+          console.log("Found products:", products.length);
+
+          if (products.length > 0) {
+            const filteredProducts = products.filter((product: Product) => {
+              const productName = product.name?.toLowerCase() || "";
+              const query = searchQuery.toLowerCase();
+
+              return (
+                productName.includes(query) ||
+                productName.split(" ").some((word) => word.includes(query))
+              );
+            });
+
+            console.log("Filtered products:", filteredProducts.length);
+            setSearchResults(filteredProducts.slice(0, 10));
+          } else {
+            console.log("No products found in response");
+            setSearchResults([]);
+          }
         } else {
-          console.log(" No successful response");
+          console.error("Search API error:", response.status);
           setSearchResults([]);
         }
       } catch (error) {
-        console.error(" Search error:", error);
+        console.error("Search error:", error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -274,6 +302,8 @@ export default function Navbar() {
     const debounceTimer = setTimeout(() => {
       if (searchQuery.trim()) {
         searchProducts();
+      } else {
+        setSearchResults([]);
       }
     }, 300);
 
@@ -287,7 +317,7 @@ export default function Navbar() {
     setAuthenticated(false);
     setUser(null);
     setIsUserMenuOpen(false);
-    window.location.href = "/";
+    router.push("/");
   };
 
   const goToAdmin = (): void => {
@@ -323,6 +353,75 @@ export default function Navbar() {
     setSearchQuery("");
     setSearchResults([]);
   };
+
+  // Update your handleLanguageChange function in Navbar:
+  const handleLanguageChange = (newLocale: string): void => {
+    setIsLanguageMenuOpen(false);
+
+    console.log("Current URL:", window.location.href);
+    console.log("Current pathname:", pathname);
+    console.log("Current locale from useLocale:", locale);
+    console.log("New locale:", newLocale);
+
+    // Get current URL path
+    const currentUrl = new URL(window.location.href);
+    const pathSegments = currentUrl.pathname.split("/").filter(Boolean);
+
+    // Check if first segment is a locale
+    if (
+      pathSegments.length > 0 &&
+      ["en", "az", "ru"].includes(pathSegments[0])
+    ) {
+      // Replace the locale segment
+      pathSegments[0] = newLocale;
+    } else {
+      // Add locale at the beginning
+      pathSegments.unshift(newLocale);
+    }
+
+    // Build new URL
+    const newPath = `/${pathSegments.join("/")}`;
+    const newUrl = `${currentUrl.origin}${newPath}${currentUrl.search}`;
+
+    console.log("Navigating to:", newUrl);
+
+    // Force full page reload to ensure locale change takes effect
+    window.location.href = newUrl;
+  };
+
+  const getLanguageName = (code: string): string => {
+    // First try to get from URL (more reliable)
+    if (typeof window !== "undefined") {
+      const pathSegments = window.location.pathname.split("/").filter(Boolean);
+      if (
+        pathSegments.length > 0 &&
+        ["en", "az", "ru"].includes(pathSegments[0])
+      ) {
+        const urlLocale = pathSegments[0];
+        switch (urlLocale) {
+          case "en":
+            return "EN";
+          case "az":
+            return "AZ";
+          case "ru":
+            return "RU";
+        }
+      }
+    }
+
+    // Fallback to useLocale() value
+    switch (code) {
+      case "en":
+        return "EN";
+      case "az":
+        return "AZ";
+      case "ru":
+        return "RU";
+      default:
+        return code.toUpperCase();
+    }
+  };
+
   const displayCartCount = (): string => {
     const count = getCartItemCount();
     if (authenticated && currentUserId) {
@@ -369,14 +468,14 @@ export default function Navbar() {
               href="/"
               className="text-black hover:text-gray-600 font-semibold"
             >
-              Home
+              {t("home")}
             </Link>
             <div className="relative group">
               <Link
                 href="/shop"
                 className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
               >
-                Shop
+                {t("shop")}
                 <ChevronDown className="ml-1 h-4 w-4" />
               </Link>
             </div>
@@ -384,20 +483,20 @@ export default function Navbar() {
               href="/blog"
               className="text-black hover:text-gray-600 font-semibold"
             >
-              Blog
+              {t("blog")}
             </Link>
             <Link
               href="/about-us"
               className="text-black hover:text-gray-600 font-semibold"
             >
-              About Us
+              {t("aboutUs")}
             </Link>
             <div className="relative group">
               <Link
                 href="/faq"
                 className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
               >
-                Faq
+                {t("faq")}
                 <ChevronDown className="ml-1 h-4 w-4" />
               </Link>
             </div>
@@ -406,14 +505,55 @@ export default function Navbar() {
                 href="/contact-us"
                 className="text-black flex justify-center items-center hover:text-gray-600 font-semibold"
               >
-                Contact Us
+                {t("contactUs")}
                 <ChevronDown className="ml-1 h-4 w-4" />
               </Link>
             </div>
           </div>
           <div className="flex items-center">
+            {/* Language Selector */}
+            <div className="relative mr-4" ref={languageMenuRef}>
+              <button
+                onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
+                className="text-black hover:text-gray-900 flex items-center gap-1 px-2"
+              >
+                <Globe className="h-5 w-5" />
+                <span className="text-sm font-medium">
+                  {getLanguageName(locale)}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${isLanguageMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isLanguageMenuOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
+                  <button
+                    onClick={() => handleLanguageChange("en")}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors ${locale === "en" ? "bg-gray-50 text-gray-900" : "text-gray-700"}`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange("az")}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors ${locale === "az" ? "bg-gray-50 text-gray-900" : "text-gray-700"}`}
+                  >
+                    AZ
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange("ru")}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors ${locale === "ru" ? "bg-gray-50 text-gray-900" : "text-gray-700"}`}
+                  >
+                    RU
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="h-6 w-px bg-gray-300"></div>
+
             <div className="relative">
-              <button 
+              <button
                 onClick={handleSearchToggle}
                 className="text-black hover:text-gray-900 px-4"
               >
@@ -460,7 +600,7 @@ export default function Navbar() {
 
               {/* Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 py-2">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
                   {authenticated && user ? (
                     <>
                       {/* User Info Header */}
@@ -487,7 +627,7 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <UserCircle className="h-4 w-4" />
-                        My Profile
+                        {t("myProfile")}
                       </Link>
 
                       {user.role === "admin" && (
@@ -496,7 +636,7 @@ export default function Navbar() {
                           className="w-full px-4 py-3 text-left hover:bg-emerald-50 flex items-center gap-3 text-emerald-700"
                         >
                           <Shield className="w-4 h-4" />
-                          <span>Admin Panel</span>
+                          <span>{t("adminPanel")}</span>
                         </button>
                       )}
 
@@ -505,7 +645,7 @@ export default function Navbar() {
                         <>
                           <div className="px-4 pt-2 pb-1">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Quick Access
+                              {t("quickAccess")}
                             </p>
                           </div>
                           <Link
@@ -514,7 +654,7 @@ export default function Navbar() {
                             className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
                           >
                             <Package className="w-4 h-4" />
-                            <span>Products</span>
+                            <span>{t("products")}</span>
                           </Link>
                           <Link
                             href="/admin/users"
@@ -522,7 +662,7 @@ export default function Navbar() {
                             className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
                           >
                             <Users className="w-4 h-4" />
-                            <span>Users</span>
+                            <span>{t("users")}</span>
                           </Link>
                           <Link
                             href="/admin/analytics"
@@ -530,7 +670,7 @@ export default function Navbar() {
                             className="px-4 py-2 hover:bg-emerald-50 flex items-center gap-3 text-gray-700"
                           >
                             <BarChart className="w-4 h-4" />
-                            <span>Analytics</span>
+                            <span>{t("analytics")}</span>
                           </Link>
                           <div className="border-t border-emerald-50 my-1"></div>
                         </>
@@ -542,7 +682,7 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Package className="h-4 w-4" />
-                        My Orders
+                        {t("myOrders")}
                       </Link>
 
                       <div className="border-t border-gray-100 my-1"></div>
@@ -552,7 +692,7 @@ export default function Navbar() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut className="h-4 w-4" />
-                        Logout
+                        {t("logout")}
                       </button>
                     </>
                   ) : (
@@ -564,7 +704,7 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <User className="h-4 w-4" />
-                        Login
+                        {t("login")}
                       </Link>
 
                       <Link
@@ -573,7 +713,7 @@ export default function Navbar() {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <UserCircle className="h-4 w-4" />
-                        Register
+                        {t("register")}
                       </Link>
                     </>
                   )}
@@ -593,7 +733,7 @@ export default function Navbar() {
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Məhsul axtar..."
+                    placeholder={t("searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#0AA360] focus:outline-none text-lg"
@@ -603,11 +743,11 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setIsSearchOpen(false);
-                    setSearchQuery('');
+                    setSearchQuery("");
                     setSearchResults([]);
                   }}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  aria-label="Bağla"
+                  aria-label={t("close")}
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -616,18 +756,20 @@ export default function Navbar() {
                 {isSearching ? (
                   <div className="text-center py-8 text-gray-500">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0AA360] mx-auto mb-3"></div>
-                    <p>Axtarılır...</p>
+                    <p>{t("searching")}</p>
                   </div>
                 ) : searchQuery.trim().length === 0 ? (
                   <div className="text-center py-8 text-gray-400">
                     <Search className="w-16 h-16 mx-auto mb-3 opacity-30" />
-                    <p>Məhsul axtarmaq üçün yazmağa başlayın</p>
+                    <p>{t("startTyping")}</p>
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Package className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                    <p className="font-medium">Məhsul tapılmadı</p>
-                    <p className="text-sm mt-1">"{searchQuery}" üçün nəticə yoxdur</p>
+                    <p className="font-medium">{t("noProductsFound")}</p>
+                    <p className="text-sm mt-1">
+                      "{searchQuery}" {t("noResultsFor")}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -647,12 +789,16 @@ export default function Navbar() {
                               className="w-16 h-16 object-cover rounded"
                               onError={(e) => {
                                 console.error("Image load error:", imageUrl);
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.nextElementSibling?.classList.remove(
+                                  "hidden",
+                                );
                               }}
                             />
                           ) : null}
-                          <div className={`w-16 h-16 bg-gray-200 rounded flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
+                          <div
+                            className={`w-16 h-16 bg-gray-200 rounded flex items-center justify-center ${imageUrl ? "hidden" : ""}`}
+                          >
                             <Package className="h-8 w-8 text-gray-400" />
                           </div>
                           <div className="flex-1 min-w-0">

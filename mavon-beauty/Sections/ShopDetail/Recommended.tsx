@@ -2,72 +2,261 @@
 import ProductCard from "@/Components/ProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
-// Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
-
-// Import Swiper styles
 import "swiper/css";
+import { useTranslations } from "next-intl";
 
-export default function Recommended() {
+interface Product {
+  id: string;
+  _id?: string;
+  name: string;
+  price: number;
+  image: string;
+  colors: string[];
+  showWishlist?: boolean;
+  badge?: string;
+  rating?: number;
+  reviews?: number;
+  originalPrice?: number;
+  images?: string[];
+  brand?: string;
+  color?: string;
+  stock?: number;
+}
+
+const API_BASE_URL = "http://localhost:3001/api/v1";
+
+export default function Suggestions() {
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [totalSlides, setTotalSlides] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(4); // Default for SSR
+  const [itemsPerView, setItemsPerView] = useState(4);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("ShopDetail");
 
-  const products = [
-    {
-      id: 1,
-      name: "Neutrogena Hydro Boost Water Gel",
-      price: 500,
-      image:
-        "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
-      colors: ["#2C5F4F", "#C8E6C9", "#FFE5B4"],
-      moreColors: 3,
-      showWishlist: true,
-    },
-    {
-      id: 2,
-      name: "Cetaphil Gentle Skin Cleanser",
-      price: 280,
-      image: "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
-      colors: ["#F4C2A8", "#F8B4AA", "#B8E6D5"],
-      moreColors: 3,
-      showWishlist: true,
-    },
-    {
-      id: 3,
-      name: "Hyaluronic Acid Moisturizer",
-      price: 200,
-      image:
-        "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600",
-      colors: ["#F4C2A8", "#B8E6D5", "#4DB8AC"],
-      moreColors: 2,
-      showWishlist: true,
-    },
-    {
-      id: 4,
-      name: "Luxurious Body Butter",
-      price: 200,
-      image:
-        "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
-      colors: ["#F4C2A8", "#B8E6D5", "#4DB8AC"],
-      moreColors: 2,
-      showWishlist: true,
-    },
-    {
-      id: 5,
-      name: "Vitamin C Serum",
-      price: 450,
-      image: "https://images.unsplash.com/photo-1556229010-aa1e86d66414?w=600",
-      colors: ["#FFD700", "#F4C2A8", "#E8E8E8"],
-      moreColors: 1,
-      showWishlist: true,
-    },
-  ];
+  // Fetch random products from database
+  useEffect(() => {
+    const fetchRandomProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_BASE_URL}/products`);
+        const data = await response.json();
+
+        if (data.success) {
+          const allProducts = data.data || data.products || [];
+          const randomProducts = getRandomProducts(allProducts, 6);
+
+          const transformedProducts = randomProducts.map((product: any) => {
+            const colors = generateColorsFromProduct(product);
+            const showWishlist = product.stock > 0;
+
+            let badge = "";
+            if (product.stock < 10 && product.stock > 0) {
+              badge = "Low Stock";
+            } else if (product.stock === 0) {
+              badge = "Out of Stock";
+            }
+
+            const rating = 3.5 + Math.random() * 1.5;
+            const reviews = Math.floor(Math.random() * 100) + 1;
+            const originalPrice =
+              Math.random() > 0.8 ? product.price * 1.2 : undefined;
+
+            let imageUrl = "https://via.placeholder.com/400x500?text=No+Image";
+            if (product.images && product.images.length > 0) {
+              const firstImage = product.images[0];
+              imageUrl = getFullImageUrl(firstImage);
+            } else if (product.image) {
+              const firstImage =
+                typeof product.image === "string"
+                  ? product.image
+                  : product.image?.url;
+              if (firstImage) {
+                imageUrl = getFullImageUrl(firstImage);
+              }
+            }
+
+            return {
+              id: product._id || product.id,
+              name: product.name,
+              price: product.price,
+              image: imageUrl,
+              colors,
+              showWishlist,
+              badge: badge || undefined,
+              rating: parseFloat(rating.toFixed(1)),
+              reviews,
+              originalPrice,
+            };
+          });
+
+          setProducts(transformedProducts);
+        } else {
+          setError("Failed to fetch products");
+        }
+      } catch (err) {
+        console.error("Error fetching random products:", err);
+        setError("Error loading products. Please try again.");
+        setProducts(getFallbackProducts());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRandomProducts();
+  }, []);
+
+  const getFullImageUrl = (imagePath: string): string => {
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    } else if (imagePath.startsWith("/")) {
+      return `${API_BASE_URL.replace("/api/v1", "")}${imagePath}`;
+    } else {
+      return `${API_BASE_URL.replace("/api/v1", "")}/${imagePath}`;
+    }
+  };
+
+  const generateColorsFromProduct = (product: any): string[] => {
+    const colors: string[] = [];
+    const colorMap: Record<string, string> = {
+      red: "#FF0000",
+      green: "#00FF00",
+      blue: "#0000FF",
+      black: "#000000",
+      white: "#FFFFFF",
+      yellow: "#FFFF00",
+      pink: "#FFC0CB",
+      purple: "#800080",
+      brown: "#A52A2A",
+      gray: "#808080",
+      silver: "#C0C0C0",
+      gold: "#FFD700",
+      beige: "#F5F5DC",
+      navy: "#000080",
+      teal: "#008080",
+      orange: "#FFA500",
+    };
+
+    if (
+      product.colors &&
+      Array.isArray(product.colors) &&
+      product.colors.length > 0
+    ) {
+      product.colors.slice(0, 3).forEach((color: string) => {
+        const normalizedColor = color.toLowerCase().trim();
+        const hexColor = colorMap[normalizedColor] || "#808080";
+        colors.push(hexColor);
+      });
+    } else if (product.color) {
+      const normalizedColor = product.color.toLowerCase().trim();
+      const hexColor = colorMap[normalizedColor] || "#808080";
+      colors.push(hexColor);
+    }
+
+    const additionalColors = [
+      "#4DB8AC",
+      "#B8E6D5",
+      "#F4C2A8",
+      "#F8B4AA",
+      "#2C5F4F",
+    ];
+    while (colors.length < 3) {
+      const randomColor =
+        additionalColors[Math.floor(Math.random() * additionalColors.length)];
+      if (!colors.includes(randomColor)) {
+        colors.push(randomColor);
+      }
+    }
+
+    return colors;
+  };
+
+  const getRandomProducts = (allProducts: any[], count: number): any[] => {
+    if (allProducts.length <= count) {
+      return allProducts;
+    }
+
+    const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  const getFallbackProducts = (): Product[] => {
+    return [
+      {
+        id: "1",
+        name: "Neutrogena Hydro Boost Water Gel",
+        price: 500,
+        image:
+          "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=600",
+        colors: ["#2C5F4F", "#C8E6C9", "#FFE5B4"],
+        showWishlist: true,
+        rating: 4.5,
+        reviews: 42,
+      },
+      {
+        id: "2",
+        name: "Cetaphil Gentle Skin Cleanser",
+        price: 280,
+        image:
+          "https://images.unsplash.com/photo-1667242196599-d2869afe3c3e?w=900&auto=format&fit=crop&q=60",
+        colors: ["#F4C2A8", "#F8B4AA", "#B8E6D5"],
+        showWishlist: true,
+        rating: 4.2,
+        reviews: 38,
+      },
+      {
+        id: "3",
+        name: "Hyaluronic Acid Moisturizer",
+        price: 200,
+        image:
+          "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=600",
+        colors: ["#F4C2A8", "#B8E6D5", "#4DB8AC"],
+        showWishlist: true,
+        rating: 4.7,
+        reviews: 56,
+      },
+      {
+        id: "4",
+        name: "Luxurious Body Butter",
+        price: 200,
+        image:
+          "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
+        colors: ["#F4C2A8", "#B8E6D5", "#4DB8AC"],
+        showWishlist: true,
+        rating: 4.3,
+        reviews: 29,
+      },
+      {
+        id: "5",
+        name: "Vitamin C Serum",
+        price: 450,
+        image:
+          "https://images.unsplash.com/photo-1720118492579-eaeb5e878bb7?w=900&auto=format&fit=crop&q=60",
+        colors: ["#FFD700", "#F4C2A8", "#E8E8E8"],
+        showWishlist: true,
+        rating: 4.6,
+        reviews: 67,
+      },
+      {
+        id: "6",
+        name: "Retinol Night Cream",
+        price: 350,
+        image:
+          "https://images.unsplash.com/photo-1556228578-dd3f6e90bc1a?w=600",
+        colors: ["#B8E6D5", "#4DB8AC", "#2C5F4F"],
+        showWishlist: true,
+        rating: 4.4,
+        reviews: 31,
+      },
+    ];
+  };
 
   // Calculate responsive values on client side
   useEffect(() => {
@@ -86,14 +275,10 @@ export default function Recommended() {
       }
 
       setItemsPerView(newItemsPerView);
-      // Calculate total slides for dots (max slide positions)
       setTotalSlides(Math.max(0, products.length - newItemsPerView + 1));
     };
 
-    // Calculate on mount
     calculateResponsiveValues();
-
-    // Recalculate on resize
     window.addEventListener("resize", calculateResponsiveValues);
 
     return () => {
@@ -101,17 +286,64 @@ export default function Recommended() {
     };
   }, [products.length]);
 
-  // Function to calculate total slides (using state)
   const getTotalSlides = () => {
     return totalSlides;
   };
+
+  const handleProductClick = (productId: string) => {
+    window.location.href = `/shop/${productId}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-20 px-4">
+        <div>
+          <h2 className="text-center font-bold text-3xl tracking-wide mb-10">
+            {t("recommendedProducts")}
+          </h2>
+        </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 h-96 mb-4 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && products.length === 0) {
+    return (
+      <div className="mt-20 px-4">
+        <div>
+          <h2 className="text-center font-bold text-3xl tracking-wide mb-10">
+            {t("youMayAlsoLike")}
+          </h2>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-20 px-4">
       <div>
         <div>
           <h2 className="text-center font-bold text-3xl tracking-wide mb-10">
-            Recommended products
+            {t("youMayAlsoLike")}
           </h2>
         </div>
 
@@ -156,7 +388,10 @@ export default function Recommended() {
               {products.map((product) => (
                 <SwiperSlide key={product.id} className="h-auto!">
                   <div className="h-full">
-                    <ProductCard product={product} />
+                    <ProductCard
+                      product={product}
+                      onProductClick={() => handleProductClick(product.id)}
+                    />
                   </div>
                 </SwiperSlide>
               ))}
@@ -174,7 +409,7 @@ export default function Recommended() {
           </button>
         </div>
 
-        {/* Custom Dots Indicator - Only show if there's more than 1 slide */}
+        {/* Custom Dots Indicator */}
         {totalSlides > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             {Array.from({ length: getTotalSlides() }).map((_, idx) => (

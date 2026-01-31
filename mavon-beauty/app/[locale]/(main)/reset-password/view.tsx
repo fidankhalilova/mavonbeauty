@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Lock, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function ResetPasswordView() {
   const [password, setPassword] = useState("");
@@ -11,14 +12,13 @@ export default function ResetPasswordView() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
-  const [verifyingToken, setVerifyingToken] = useState(true); // NEW: Add verification loading state
+  const [verifyingToken, setVerifyingToken] = useState(true);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const t = useTranslations("Auth");
 
-  // Verify token on component mount
-  // In ResetPasswordView.tsx, fix the verifyToken function:
   useEffect(() => {
     const verifyToken = async () => {
       if (!token) {
@@ -29,7 +29,7 @@ export default function ResetPasswordView() {
 
       try {
         const response = await fetch(
-          `http://localhost:3001/api/v1/auth/verify-reset-token?token=${token}`, // Add token parameter
+          `http://localhost:3001/api/v1/auth/verify-reset-token?token=${token}`,
         );
 
         if (!response.ok) {
@@ -55,17 +55,17 @@ export default function ResetPasswordView() {
     setError("");
 
     if (!token) {
-      setError("Invalid reset link");
+      setError(t("errors.invalidLink"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("errors.passwordsMatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(t("errors.passwordRequired"));
       return;
     }
 
@@ -75,7 +75,6 @@ export default function ResetPasswordView() {
       const response = await fetch(
         "http://localhost:3001/api/v1/auth/reset-password",
         {
-          // Use full URL
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -87,22 +86,21 @@ export default function ResetPasswordView() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage(data.message);
-        // Redirect to login after 3 seconds
+        setMessage(t("messages.passwordResetSuccess"));
         setTimeout(() => {
           router.push("/login");
         }, 3000);
       } else {
-        setError(data.message || "Failed to reset password");
+        setError(data.message || t("errors.networkError"));
       }
     } catch (err) {
-      setError("Network error. Please try again.");
+      setError(t("errors.networkError"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // NEW: Show loading state while verifying token
+  // Show loading state while verifying token
   if (verifyingToken) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -110,18 +108,16 @@ export default function ResetPasswordView() {
           <div className="bg-white rounded-3xl shadow-xl p-8 border border-emerald-100 text-center">
             <Loader2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-spin" />
             <h2 className="text-2xl font-medium text-gray-800 mb-2">
-              Verifying Link
+              {t("verifyingLink")}
             </h2>
-            <p className="text-gray-600 mb-6">
-              Please wait while we verify your reset link...
-            </p>
+            <p className="text-gray-600 mb-6">{t("verifyingLinkDesc")}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Token invalid or expired (only show when verification is complete)
+  // Token invalid or expired
   if (tokenValid === false) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -129,17 +125,14 @@ export default function ResetPasswordView() {
           <div className="bg-white rounded-3xl shadow-xl p-8 border border-red-100 text-center">
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-medium text-gray-800 mb-2">
-              Invalid or Expired Link
+              {t("invalidLink")}
             </h2>
-            <p className="text-gray-600 mb-6">
-              This password reset link is invalid or has expired. Please request
-              a new reset link.
-            </p>
+            <p className="text-gray-600 mb-6">{t("invalidLinkDesc")}</p>
             <Link
               href="/forgot-password"
               className="inline-block bg-emerald-500 text-white px-6 py-3 rounded-full font-medium hover:bg-emerald-600 transition-colors"
             >
-              Request New Reset Link
+              {t("requestNewLink")}
             </Link>
           </div>
         </div>
@@ -147,7 +140,7 @@ export default function ResetPasswordView() {
     );
   }
 
-  // Only show the reset form if token is valid AND verification is complete
+  // Show the reset form if token is valid
   if (tokenValid === true) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -155,9 +148,9 @@ export default function ResetPasswordView() {
           <div className="bg-white rounded-3xl shadow-xl p-8 border border-emerald-100">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-medium text-gray-800 mb-2">
-                Reset Your Password
+                {t("resetPassword")}
               </h2>
-              <p className="text-gray-500">Enter your new password below</p>
+              <p className="text-gray-500">{t("resetPasswordDesc")}</p>
             </div>
 
             {/* Success Message */}
@@ -177,7 +170,7 @@ export default function ResetPasswordView() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Password
+                  {t("newPassword")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -185,20 +178,20 @@ export default function ResetPasswordView() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter new password"
+                    placeholder={t("enterPasswordPlaceholder")}
                     className="w-full pl-12 pr-4 py-3 border border-emerald-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
                     required
                     minLength={8}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1 ml-4">
-                  Must be at least 8 characters
+                  {t("min8Chars")}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm New Password
+                  {t("confirmNewPassword")}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -206,7 +199,7 @@ export default function ResetPasswordView() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new password"
+                    placeholder={t("confirmPasswordPlaceholder")}
                     className="w-full pl-12 pr-4 py-3 border border-emerald-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all"
                     required
                   />
@@ -221,12 +214,12 @@ export default function ResetPasswordView() {
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Resetting...
+                    {t("resetting")}
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    Reset Password
+                    {t("resetPassword")}
                   </>
                 )}
               </button>
@@ -234,12 +227,12 @@ export default function ResetPasswordView() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Remember your password?{" "}
+                {t("rememberPassword")}{" "}
                 <Link
                   href="/login"
                   className="text-emerald-600 hover:text-emerald-700 font-medium"
                 >
-                  Sign in
+                  {t("signIn")}
                 </Link>
               </p>
             </div>
@@ -249,6 +242,6 @@ export default function ResetPasswordView() {
     );
   }
 
-  // Fallback - shouldn't reach here, but just in case
+  // Fallback
   return null;
 }

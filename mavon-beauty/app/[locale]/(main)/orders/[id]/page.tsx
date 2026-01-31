@@ -10,13 +10,12 @@ import {
   MapPin,
   CreditCard,
   Printer,
-  Download,
   Mail,
   Phone,
-  Globe,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface OrderItem {
   _id: string;
@@ -83,6 +82,7 @@ export default function OrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
+  const t = useTranslations("Orders");
 
   useEffect(() => {
     fetchOrder();
@@ -110,11 +110,11 @@ export default function OrderDetailsPage() {
       if (data.success) {
         setOrder(data.data);
       } else {
-        setError(data.message || "Failed to fetch order details");
+        setError(data.message || t("errorLoadingOrder"));
       }
     } catch (error: any) {
       console.error("Error fetching order:", error);
-      setError("Failed to load order details. Please try again.");
+      setError(t("errorLoadingOrder"));
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ export default function OrderDetailsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-block w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading order details...</p>
+            <p className="mt-4 text-gray-600">{t("loadingOrderDetails")}</p>
           </div>
         </div>
       </div>
@@ -193,11 +193,11 @@ export default function OrderDetailsPage() {
           <div className="text-center">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">
-              {error || "Order not found"}
+              {error || t("orderNotFound")}
             </p>
             <Link href="/orders">
               <button className="mt-4 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                Back to Orders
+                {t("backToOrders")}
               </button>
             </Link>
           </div>
@@ -216,12 +216,12 @@ export default function OrderDetailsPage() {
               <Link href="/orders">
                 <button className="flex items-center text-emerald-600 hover:text-emerald-700">
                   <ArrowLeft className="w-5 h-5 mr-2" />
-                  Back to Orders
+                  {t("backToOrders")}
                 </button>
               </Link>
               <div>
                 <h1 className="text-3xl md:text-4xl font-light text-gray-800 tracking-wide">
-                  Order Details
+                  {t("orderDetails")}
                 </h1>
                 <p className="text-gray-600 mt-1">
                   #{order.orderNumber} • {formatDate(order.orderedAt)}
@@ -234,12 +234,12 @@ export default function OrderDetailsPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors"
               >
                 <Printer className="w-5 h-5" />
-                Print Invoice
+                {t("printInvoice")}
               </button>
               <Link href="/shop">
                 <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
                   <Home className="w-5 h-5" />
-                  Shop More
+                  {t("shopMore")}
                 </button>
               </Link>
             </div>
@@ -255,21 +255,27 @@ export default function OrderDetailsPage() {
               {getStatusIcon(order.status)}
               <div>
                 <h3 className="text-xl font-semibold">
-                  Order{" "}
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  {t("orderNumber", { number: order.orderNumber })} -{" "}
+                  {t(order.status)}
                 </h3>
                 <p className="opacity-90">
                   {order.status === "delivered"
-                    ? `Delivered on ${formatDate(order.deliveredAt!)}`
+                    ? t("statusMessages.delivered", {
+                        date: formatDate(order.deliveredAt!),
+                      })
                     : order.status === "shipped"
-                      ? `Shipped on ${order.trackingNumber ? `with tracking #${order.trackingNumber}` : ""}`
-                      : "Your order is being processed"}
+                      ? t("statusMessages.shipped", {
+                          trackingInfo: order.trackingNumber
+                            ? `with tracking #${order.trackingNumber}`
+                            : "",
+                        })
+                      : t("statusMessages.processing")}
                 </p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold">${order.total.toFixed(2)}</p>
-              <p className="text-sm opacity-90">Total Amount</p>
+              <p className="text-sm opacity-90">{t("total")}</p>
             </div>
           </div>
         </div>
@@ -280,7 +286,7 @@ export default function OrderDetailsPage() {
             {/* Order Items */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 print:shadow-none print:border-0">
               <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                Order Items
+                {t("orderItems")}
               </h2>
               <div className="space-y-4">
                 {order.items.map((item, index) => (
@@ -346,7 +352,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <MapPin className="w-6 h-6 text-emerald-600" />
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Shipping Address
+                    {t("shippingInfo")}
                   </h3>
                 </div>
                 <div className="space-y-2">
@@ -382,32 +388,36 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <CreditCard className="w-6 h-6 text-emerald-600" />
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Payment Information
+                    {t("paymentInfo")}
                   </h3>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500">Payment Method</p>
+                    <p className="text-sm text-gray-500">
+                      {t("paymentMethod")}
+                    </p>
                     <p className="font-medium text-gray-800 capitalize">
                       {order.paymentInfo.method}
                     </p>
                   </div>
                   {order.paymentInfo.cardLast4 && (
                     <div>
-                      <p className="text-sm text-gray-500">Card Number</p>
+                      <p className="text-sm text-gray-500">{t("cardNumber")}</p>
                       <p className="font-medium text-gray-800">
                         **** **** **** {order.paymentInfo.cardLast4}
                       </p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm text-gray-500">Transaction ID</p>
+                    <p className="text-sm text-gray-500">
+                      {t("transactionId")}
+                    </p>
                     <p className="font-medium text-gray-800">
                       {order.paymentInfo.transactionId}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Payment Date</p>
+                    <p className="text-sm text-gray-500">{t("paymentDate")}</p>
                     <p className="font-medium text-gray-800">
                       {formatDate(order.paymentInfo.paidAt)}
                     </p>
@@ -421,25 +431,29 @@ export default function OrderDetailsPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-6 print:static print:shadow-none print:border-0">
               <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                Order Summary
+                {t("orderSummary")}
               </h2>
 
               <div className="space-y-4 mb-6">
                 {/* Order Info */}
                 <div className="pb-4 border-b border-gray-100">
                   <div className="flex justify-between text-gray-600 mb-2">
-                    <span>Order Number</span>
+                    <span>
+                      {t("orderNumber", { number: "" }).replace(":", "")}
+                    </span>
                     <span className="font-medium">{order.orderNumber}</span>
                   </div>
                   <div className="flex justify-between text-gray-600 mb-2">
-                    <span>Order Date</span>
+                    <span>{t("orderDate")}</span>
                     <span className="font-medium">
                       {formatDate(order.orderedAt)}
                     </span>
                   </div>
                   {order.deliveredAt && (
                     <div className="flex justify-between text-gray-600">
-                      <span>Delivered Date</span>
+                      <span>
+                        {t("deliveredOn", { date: "" }).replace(":", "")}
+                      </span>
                       <span className="font-medium">
                         {formatDate(order.deliveredAt)}
                       </span>
@@ -449,7 +463,9 @@ export default function OrderDetailsPage() {
 
                 {/* Shipping Method */}
                 <div className="pb-4 border-b border-gray-100">
-                  <p className="text-sm text-gray-500 mb-2">Shipping Method</p>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {t("shippingMethod")}
+                  </p>
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-gray-800 capitalize">
                       {order.shippingMethod}
@@ -461,7 +477,7 @@ export default function OrderDetailsPage() {
                   {order.trackingNumber && (
                     <div className="mt-2 p-3 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-500 mb-1">
-                        Tracking Number
+                        {t("tracking")}
                       </p>
                       <code className="font-mono text-sm">
                         {order.trackingNumber}
@@ -473,27 +489,27 @@ export default function OrderDetailsPage() {
                 {/* Cost Breakdown */}
                 <div className="space-y-3">
                   <div className="flex justify-between text-gray-600">
-                    <span>Subtotal</span>
+                    <span>{t("subtotal")}</span>
                     <span className="font-medium">
                       ${order.subtotal.toFixed(2)}
                     </span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-emerald-600">
-                      <span>Discount</span>
+                      <span>{t("discount")}</span>
                       <span className="font-medium">
                         -${order.discount.toFixed(2)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
+                    <span>{t("shipping")}</span>
                     <span className="font-medium">
                       ${order.shippingCost.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>Tax</span>
+                    <span>{t("tax")}</span>
                     <span className="font-medium">${order.tax.toFixed(2)}</span>
                   </div>
                 </div>
@@ -501,7 +517,7 @@ export default function OrderDetailsPage() {
                 {/* Total */}
                 <div className="pt-4 border-t border-gray-100">
                   <div className="flex justify-between font-bold text-lg">
-                    <span className="text-gray-800">Total</span>
+                    <span className="text-gray-800">{t("total")}</span>
                     <span className="text-emerald-600">
                       ${order.total.toFixed(2)}
                     </span>
@@ -513,7 +529,7 @@ export default function OrderDetailsPage() {
               {order.notes && (
                 <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
                   <p className="text-sm font-medium text-emerald-800 mb-1">
-                    Order Notes
+                    {t("orderNotes")}
                   </p>
                   <p className="text-sm text-emerald-700">{order.notes}</p>
                 </div>
@@ -522,17 +538,17 @@ export default function OrderDetailsPage() {
               {/* Help Section */}
               <div className="mt-8 pt-6 border-t border-gray-100 print:hidden">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">
-                  Need Help?
+                  {t("needHelp")}
                 </h3>
                 <div className="space-y-2">
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors">
-                    Contact Customer Support
+                    {t("contactSupport")}
                   </button>
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors">
-                    Request Return
+                    {t("requestReturn")}
                   </button>
                   <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors">
-                    View Return Policy
+                    {t("viewReturnPolicy")}
                   </button>
                 </div>
               </div>

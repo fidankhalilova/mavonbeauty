@@ -1,12 +1,15 @@
 "use client";
 import React from "react";
+import { useTranslations } from "next-intl";
 
 export default function BlogMain() {
+  const t = useTranslations("Blog");
+
   return (
     <div className="w-full bg-white">
       <div className="max-w-7xl mx-auto py-12">
         {/* Header */}
-        <h1 className="text-4xl font-bold text-gray-900 mb-12">News</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-12">{t("news")}</h1>
 
         {/* Featured Article */}
         <div className="grid md:grid-cols-2 gap-8 items-center mb-24">
@@ -19,20 +22,18 @@ export default function BlogMain() {
           </div>
           <div className="space-y-4">
             <h2 className="text-3xl font-bold text-gray-900">
-              The 5 Must-Haves for a Natural Beauty Look
+              {t("featuredArticleTitle")}
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              A natural beauty appearance is all about accentuating your natural
-              characteristics and looking your best without appearing to be
-              overly made up. Here are five essentials for a natural beauty...
+              {t("featuredArticleDesc")}
             </p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
             <button className="text-gray-900 font-medium underline underline-offset-4 hover:text-gray-700 transition-colors">
-              Read more
+              {t("readMore")}
             </button>
           </div>
         </div>
@@ -49,17 +50,13 @@ export default function BlogMain() {
               />
             </div>
             <h3 className="text-2xl font-bold text-gray-900">
-              How to Look and Feel Your Best
+              {t("article1Title")}
             </h3>
-            <p className="text-gray-600 leading-relaxed">
-              It is critical for your entire well-being to look and feel your
-              best. You feel good when you look good, and you can do anything
-              when you feel good. Here...
-            </p>
+            <p className="text-gray-600 leading-relaxed">{t("article1Desc")}</p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
           </div>
 
@@ -73,18 +70,13 @@ export default function BlogMain() {
               />
             </div>
             <h3 className="text-2xl font-bold text-gray-900">
-              The Importance of Self-Care
+              {t("article2Title")}
             </h3>
-            <p className="text-gray-600 leading-relaxed">
-              Self-care is the discipline of actively guarding one's own
-              well-being and happiness. It entails taking steps to maintain or
-              improve one's own health, happiness, physical and mental
-              well-being. Self-care is...
-            </p>
+            <p className="text-gray-600 leading-relaxed">{t("article2Desc")}</p>
             <div className="flex items-center gap-3 text-sm text-gray-500">
-              <span>June 2023</span>
+              <span>{t("monthJune")}</span>
               <span className="w-1.5 h-1.5 bg-gray-900 rounded-full"></span>
-              <span>Eleyas ahmed</span>
+              <span>{t("author")}</span>
             </div>
           </div>
         </div>
